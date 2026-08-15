@@ -1,0 +1,169 @@
+.register-asset {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.register-asset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.register-asset-header h1 {
+  margin: 0 0 6px;
+  color: #1f2937;
+}
+
+.register-asset-header p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.back-button {
+  text-decoration: none;
+  color: #123c69;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.asset-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.asset-form-section {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 25px;
+}
+
+.asset-section-title {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.asset-section-title h2 {
+  margin: 0 0 5px;
+  font-size: 18px;
+  color: #1f2937;
+}
+
+.asset-section-title p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.asset-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.asset-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.asset-form-group label {
+  margin-bottom: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.asset-form-group label span {
+  color: #dc2626;
+}
+
+.asset-form-group input,
+.asset-form-group select,
+.asset-form-group textarea {
+  width: 100%;
+  padding: 11px 12px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+
+  font-size: 14px;
+
+  outline: none;
+
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.asset-form-group textarea {
+  resize: vertical;
+}
+
+.asset-form-group input:focus,
+.asset-form-group select:focus,
+.asset-form-group textarea:focus {
+  border-color: #123c69;
+  box-shadow: 0 0 0 2px rgba(18, 60, 105, 0.1);
+}
+
+.asset-error {
+  margin-top: 5px;
+  color: #dc2626;
+  font-size: 12px;
+}
+
+.asset-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-bottom: 30px;
+}
+
+.asset-cancel-button,
+.asset-submit-button {
+  padding: 12px 20px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.asset-cancel-button {
+  text-decoration: none;
+  background: white;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.asset-submit-button {
+  background: #123c69;
+  border: none;
+  color: white;
+}
+
+.asset-submit-button:hover {
+  background: #0d2f52;
+}
+
+@media (max-width: 700px) {
+  .register-asset-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .asset-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .asset-form-actions {
+    flex-direction: column;
+  }
+
+  .asset-cancel-button,
+  .asset-submit-button {
+    text-align: center;
+  }
+}

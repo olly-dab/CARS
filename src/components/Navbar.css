@@ -1,0 +1,48 @@
+.navbar {
+  height: 70px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 0 25px;
+}
+
+.navbar h2 {
+  margin: 0;
+  color: #123c69;
+}
+
+.navbar span {
+  color: #777;
+  font-size: 13px;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbar-user small {
+  display: block;
+  color: #777;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+
+  border-radius: 50%;
+
+  background: #123c69;
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: bold;
+}
