@@ -68,7 +68,7 @@ export default function Login() {
 
           <div className="my-8">
             <h2 className="text-3xl font-bold tracking-tight mb-3">
-               Customer Asset Tracking.
+               Customer Asset Registration.
             </h2>
             <p className="text-sm opacity-90 leading-relaxed">
           Movement logs, and customer management in one system.

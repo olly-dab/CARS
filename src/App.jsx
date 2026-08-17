@@ -20,6 +20,7 @@ import CheckOut from "./pages/CheckOut";
 import AssetHistory from "./pages/AssetHistory";
 import Reports from "./pages/Reports";
 import Users from "./pages/Users";
+import { ThemeProvider } from "./context/ThemeContext";
 
 // Route Guards
 import ProtectedRoute from "./components/ProtectedRoute";

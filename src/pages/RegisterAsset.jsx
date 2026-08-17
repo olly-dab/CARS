@@ -425,24 +425,8 @@ export default function RegisterAsset() {
                     Laptop
                   </option>
 
-                  <option value="Desktop">
-                    Desktop Computer
-                  </option>
-
-                  <option value="Monitor">
-                    Monitor
-                  </option>
-
-                  <option value="Printer">
-                    Printer
-                  </option>
-
                   <option value="Tablet">
                     Tablet
-                  </option>
-
-                  <option value="Phone">
-                    Phone
                   </option>
 
                   <option value="Other">
@@ -549,6 +533,53 @@ export default function RegisterAsset() {
                 )}
 
               </div>
+              {/* CUSTOMER NAME */}
+
+              <div className="space-y-2">
+
+                <Label htmlFor="customerName">
+                  Customer Name *
+                </Label>
+
+                <Input
+                  id="customerName"
+                  name="customerName"
+                  placeholder="e.g. John Doe"
+                  value={formData.customerName}
+                  onChange={handleChange}
+                />
+
+                {errors.customerName && (
+                  <p className="text-xs text-destructive">
+                    {errors.customerName}
+                  </p>
+                )}
+
+              </div>
+              {/* PHONE NUMBER*/}
+              <div className="space-y-2">
+
+                <Label htmlFor="phoneNumber">
+                  Phone Number *
+                </Label>
+
+                <Input
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  placeholder="e.g. 123-456-7890"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                />
+
+                {errors.phoneNumber && (
+                  <p className="text-xs text-destructive">
+                    {errors.phoneNumber}
+                  </p>
+                )}
+
+              </div>
+
+
 
 
               {/* SERIAL NUMBER */}

@@ -349,9 +349,7 @@ export default function Assets() {
                     Serial Number
                   </TableHead>
 
-                  <TableHead>
-                    Status
-                  </TableHead>
+                  
 
                   <TableHead>
                     Registered
@@ -394,19 +392,12 @@ export default function Assets() {
                         {asset.serialNumber || "-"}
                       </TableCell>
 
-                      {/* Current Status */}
-                       <TableCell>
-                          <Badge variant="success">
-                                Registered
-                          </Badge>
-                        </TableCell>
+                     
 
-                      {/* Registration Date */}
+                     {/* Registration Date & Time */}
                       <TableCell className="text-xs text-muted-foreground">
                         {asset.registeredDate
-                          ? new Date(
-                              asset.registeredDate
-                            ).toLocaleDateString()
+                          ? new Date(asset.registeredDate).toLocaleString()
                           : "-"}
                       </TableCell>
 
