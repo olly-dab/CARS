@@ -625,28 +625,60 @@ export default function RegisterAsset() {
                   PHONE NUMBER
               ================================================= */}
 
-              <div className="space-y-2">
+              {/* =================================================
+    PHONE NUMBER
+================================================= */}
 
-                <Label htmlFor="phoneNumber">
-                  Phone Number *
-                </Label>
+<div className="space-y-2">
 
-                <Input
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  type="tel"
-                  placeholder="e.g. 0912345678"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                />
+  <Label htmlFor="phoneNumber">
+    Phone Number *
+  </Label>
 
-                {errors.phoneNumber && (
-                  <p className="text-xs text-destructive">
-                    {errors.phoneNumber}
-                  </p>
-                )}
+  <Input
+    id="phoneNumber"
+    name="phoneNumber"
+    type="tel"
+    placeholder="+251 912345678"
+    value={formData.phoneNumber}
+    onChange={(e) => {
+      let value = e.target.value;
 
-              </div>
+      // Always keep +251 at the beginning
+      if (!value.startsWith("+251")) {
+        value = "+251 ";
+      }
+
+      // Only allow numbers after +251
+      const numberPart = value
+        .replace("+251", "")
+        .replace(/\D/g, "");
+
+      // Maximum 9 digits after +251
+      const limitedNumber = numberPart.slice(0, 9);
+
+      setFormData((prev) => ({
+        ...prev,
+        phoneNumber: `+251 ${limitedNumber}`,
+      }));
+
+      if (errors.phoneNumber) {
+        setErrors((prev) => ({
+          ...prev,
+          phoneNumber: "",
+        }));
+      }
+    }}
+    className="font-mono"
+  />
+
+  {errors.phoneNumber && (
+    <p className="text-xs text-destructive">
+      {errors.phoneNumber}
+    </p>
+  )}
+
+</div>
 
               {/* =================================================
                   INITIAL STATUS

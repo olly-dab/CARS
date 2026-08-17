@@ -20,6 +20,7 @@ import CheckOut from "./pages/CheckOut";
 import AssetHistory from "./pages/AssetHistory";
 import Reports from "./pages/Reports";
 import Users from "./pages/Users";
+import Profile from "./pages/Profile";
 import { ThemeProvider } from "./context/ThemeContext";
 
 // Route Guards
@@ -59,6 +60,22 @@ function App() {
               />
             }
           />
+          <Route 
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />  
+          <Route
+          path="/ThemeProvider"
+          element={
+            <ThemeProvider>
+              <Login />
+            </ThemeProvider>
+          }
+        />
 
 
           {/* =========================

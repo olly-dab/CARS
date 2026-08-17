@@ -269,27 +269,6 @@ export default function AssetDetails() {
               </div>
 
 
-              {/* ASSET MODEL */}
-
-              <div>
-
-                <span className="text-xs text-muted-foreground block font-medium">
-                  Asset Model
-                </span>
-
-                <div className="flex items-center gap-2 mt-1">
-
-                  <Tag className="h-4 w-4 text-muted-foreground" />
-
-                  <p className="font-semibold text-foreground">
-                    {asset.model || asset.assetModel || "-"}
-                  </p>
-
-                </div>
-
-              </div>
-
-
               {/* ASSET TYPE */}
 
               <div>
