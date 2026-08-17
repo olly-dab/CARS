@@ -23,6 +23,7 @@ import Users from "./pages/Users";
 import Profile from "./pages/Profile";
 import { ThemeProvider } from "./context/ThemeContext";
 
+
 // Route Guards
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
@@ -60,6 +61,7 @@ function App() {
               />
             }
           />
+          
           <Route 
             path="/profile"
             element={
@@ -76,6 +78,7 @@ function App() {
             </ThemeProvider>
           }
         />
+            
 
 
           {/* =========================
