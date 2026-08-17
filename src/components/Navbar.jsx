@@ -10,7 +10,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur px-6 shadow-sm">
       <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-        <span>CARS</span>
+        <span>Customer Asset Tracking</span>
         <span>/</span>
         <span className="text-foreground capitalize font-semibold">Workspace</span>
       </div>

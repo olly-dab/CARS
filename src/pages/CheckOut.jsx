@@ -1,194 +1,790 @@
 // src/pages/CheckOut.jsx
-import { useState } from "react";
+
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowUpRight, AlertTriangle } from "lucide-react";
+
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  Search,
+  X,
+  Laptop,
+} from "lucide-react";
+
 
 export default function CheckOut() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    assetId: "",
-    customerName: "",
-    purpose: "",
-    expectedReturnDate: "",
-    notes: "",
-  });
+
+  const [assets, setAssets] = useState([]);
+  const [assetSearch, setAssetSearch] = useState("");
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+  const dropdownRef = useRef(null);
+
+
+  // ======================================================
+  // LOAD ONLY AVAILABLE ASSETS
+  // ======================================================
+
+  const loadAvailableAssets = () => {
+    const all =
+      JSON.parse(
+        localStorage.getItem("cars_assets")
+      ) || [];
+
+    // ONLY assets with status = Available
+    const availableAssets = all.filter(
+      (asset) => asset.status === "Available"
+    );
+
+    setAssets(availableAssets);
   };
+
+
+  // ======================================================
+  // LOAD ASSETS WHEN PAGE OPENS
+  // ======================================================
+
+  useEffect(() => {
+    loadAvailableAssets();
+  }, []);
+
+
+  // ======================================================
+  // REFRESH AVAILABLE ASSETS WHEN WINDOW GETS FOCUS
+  // ======================================================
+
+  useEffect(() => {
+    const handleFocus = () => {
+      loadAvailableAssets();
+    };
+
+    window.addEventListener(
+      "focus",
+      handleFocus
+    );
+
+    return () => {
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+    };
+  }, []);
+
+
+  // ======================================================
+  // CLOSE DROPDOWN WHEN CLICKING OUTSIDE
+  // ======================================================
+
+  useEffect(() => {
+    function handleOutside(e) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target)
+      ) {
+        setShowDropdown(false);
+      }
+    }
+
+    document.addEventListener(
+      "mousedown",
+      handleOutside
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleOutside
+      );
+    };
+  }, []);
+
+
+  // ======================================================
+  // SEARCH ONLY AVAILABLE ASSETS
+  // ======================================================
+
+  const suggestions = assets
+    .filter(
+      (asset) =>
+        asset.assetId
+          ?.toLowerCase()
+          .includes(
+            assetSearch.toLowerCase()
+          ) ||
+
+        asset.brand
+          ?.toLowerCase()
+          .includes(
+            assetSearch.toLowerCase()
+          ) ||
+
+        asset.assetType
+          ?.toLowerCase()
+          .includes(
+            assetSearch.toLowerCase()
+          )
+    )
+    .slice(0, 6);
+
+
+  // ======================================================
+  // SELECT ASSET
+  // ======================================================
+
+  const handleSelectAsset = (asset) => {
+    setSelectedAsset(asset);
+    setAssetSearch(asset.assetId);
+    setShowDropdown(false);
+
+    if (errors.assetId) {
+      setErrors((prev) => ({
+        ...prev,
+        assetId: "",
+      }));
+    }
+  };
+
+
+  // ======================================================
+  // CLEAR SELECTED ASSET
+  // ======================================================
+
+  const handleClearAsset = () => {
+    setSelectedAsset(null);
+    setAssetSearch("");
+    setShowDropdown(false);
+  };
+
+
+  // ======================================================
+  // VALIDATION
+  // ======================================================
+
+  const validate = () => {
+    const errs = {};
+
+    if (!selectedAsset) {
+      errs.assetId =
+        "Please select an available asset.";
+    }
+
+    return errs;
+  };
+
+
+  // ======================================================
+  // CHECK OUT ASSET
+  // ======================================================
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newErrors = {};
-    if (!formData.assetId.trim()) newErrors.assetId = "Asset ID is required.";
-    if (!formData.customerName.trim()) newErrors.customerName = "Customer name is required.";
-    if (!formData.purpose) newErrors.purpose = "Purpose is required.";
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    const validationErrors = validate();
+
+    if (
+      Object.keys(validationErrors).length > 0
+    ) {
+      setErrors(validationErrors);
       return;
     }
 
-    const assets = JSON.parse(localStorage.getItem("cars_assets")) || [];
-    const assetIndex = assets.findIndex(
-      (a) => a.assetId.toLowerCase() === formData.assetId.toLowerCase()
+
+    // --------------------------------------------
+    // GET LATEST ASSET DATA
+    // --------------------------------------------
+
+    const allAssets =
+      JSON.parse(
+        localStorage.getItem("cars_assets")
+      ) || [];
+
+
+    // --------------------------------------------
+    // FIND SELECTED ASSET
+    // --------------------------------------------
+
+    const currentAsset =
+      allAssets.find(
+        (asset) =>
+          asset.id === selectedAsset.id
+      );
+
+
+    // --------------------------------------------
+    // SAFETY CHECK
+    // --------------------------------------------
+
+    if (!currentAsset) {
+      toast.error(
+        "Asset could not be found."
+      );
+
+      loadAvailableAssets();
+      handleClearAsset();
+
+      return;
+    }
+
+
+    // --------------------------------------------
+    // MAKE SURE IT IS STILL AVAILABLE
+    // --------------------------------------------
+
+    if (
+      currentAsset.status !== "Available"
+    ) {
+      toast.error(
+        "This asset is no longer available."
+      );
+
+      loadAvailableAssets();
+      handleClearAsset();
+
+      return;
+    }
+
+
+    // ==================================================
+    // UPDATE ASSET STATUS
+    // ==================================================
+
+    const updatedAssets = allAssets.map(
+      (asset) =>
+        asset.id === selectedAsset.id
+          ? {
+              ...asset,
+              status: "Checked Out",
+            }
+          : asset
     );
 
-    if (assetIndex === -1) {
-      setErrors({ assetId: "Asset not found in database." });
-      return;
-    }
 
-    const asset = assets[assetIndex];
-    if (asset.status === "Checked Out") {
-      setErrors({ assetId: "This asset is already checked out." });
-      return;
-    }
+    localStorage.setItem(
+      "cars_assets",
+      JSON.stringify(updatedAssets)
+    );
 
-    const updatedAssets = [...assets];
-    updatedAssets[assetIndex] = {
-      ...asset,
-      status: "Checked Out",
-      customerName: formData.customerName,
-    };
 
-    const history = JSON.parse(localStorage.getItem("cars_asset_history")) || [];
-    const transaction = {
+    // ==================================================
+    // ADD CHECK-OUT HISTORY
+    // ==================================================
+
+    const history =
+      JSON.parse(
+        localStorage.getItem(
+          "cars_asset_history"
+        )
+      ) || [];
+
+
+    const entry = {
       id: Date.now(),
-      assetId: asset.assetId,
-      assetName: `${asset.brand || ""} ${asset.model || ""}`.trim() || asset.assetId,
-      customerName: formData.customerName,
+
+      assetId:
+        selectedAsset.assetId,
+
+      assetName:
+        `${selectedAsset.brand} (${selectedAsset.assetType})`,
+
       action: "Check-Out",
-      purpose: formData.purpose,
-      expectedReturnDate: formData.expectedReturnDate,
-      notes: formData.notes,
-      date: new Date().toISOString(),
+
+      // Current status
+      status: "Checked Out",
+
+      date:
+        new Date().toISOString(),
     };
 
-    localStorage.setItem("cars_assets", JSON.stringify(updatedAssets));
-    localStorage.setItem("cars_asset_history", JSON.stringify([transaction, ...history]));
 
-    toast.success(`Asset ${asset.assetId} successfully checked out to ${formData.customerName}!`);
-    navigate("/assets");
+    localStorage.setItem(
+      "cars_asset_history",
+      JSON.stringify([
+        ...history,
+        entry,
+      ])
+    );
+
+
+    // ==================================================
+    // SUCCESS
+    // ==================================================
+
+    toast.success(
+      `${selectedAsset.assetId} checked out successfully!`
+    );
+
+
+    navigate("/asset-history");
   };
+
+
+  // ======================================================
+  // UI
+  // ======================================================
 
   return (
     <DashboardLayout>
-      <div className="max-w-3xl mx-auto space-y-6">
+
+      <div className="max-w-2xl mx-auto space-y-6">
+
+        {/* HEADER */}
+
         <div className="flex items-center justify-between">
+
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Check-Out Asset</h1>
-            <p className="text-sm text-muted-foreground">Sign off hardware leaving the facility.</p>
+
+            <h1 className="text-3xl font-bold tracking-tight">
+              Check-Out Asset
+            </h1>
+
+            <p className="text-sm text-muted-foreground">
+              Release equipment from the inventory.
+            </p>
+
           </div>
-          <Button variant="ghost" onClick={() => navigate("/assets")} className="gap-1">
+
+
+          <Button
+            variant="ghost"
+            onClick={() =>
+              navigate("/assets")
+            }
+            className="gap-1.5"
+          >
+
             <ArrowLeft className="h-4 w-4" />
-            <span>Back to Assets</span>
+
+            Back to Assets
+
           </Button>
+
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+
+        {/* FORM */}
+
+        <form onSubmit={handleSubmit}>
+
           <Card>
+
             <CardHeader>
-              <CardTitle className="text-base">Transaction Details</CardTitle>
-              <CardDescription>Identify asset and recipient</CardDescription>
+
+              <CardTitle className="text-base">
+                Select Asset
+              </CardTitle>
+
+              <CardDescription>
+                Choose an available asset to check out.
+              </CardDescription>
+
             </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="assetId">Asset ID *</Label>
-                <Input
-                  id="assetId"
-                  name="assetId"
-                  placeholder="e.g. CARS-LAP-001"
-                  value={formData.assetId}
-                  onChange={handleChange}
-                />
-                {errors.assetId && <p className="text-xs text-destructive">{errors.assetId}</p>}
+
+
+            <CardContent>
+
+              {/* ASSET SEARCH */}
+
+              <div
+                className="space-y-2"
+                ref={dropdownRef}
+              >
+
+                <Label htmlFor="assetSearch">
+                  Asset ID *
+                </Label>
+
+
+                <div className="relative">
+
+                  <Search
+                    className="
+                      absolute left-3
+                      top-2.5
+                      h-4 w-4
+                      text-muted-foreground
+                    "
+                  />
+
+
+                  <Input
+                    id="assetSearch"
+                    placeholder="Type to search available assets..."
+                    value={assetSearch}
+                    readOnly={
+                      !!selectedAsset
+                    }
+                    onChange={(e) => {
+
+                      setAssetSearch(
+                        e.target.value
+                      );
+
+                      setShowDropdown(true);
+
+                      setSelectedAsset(null);
+                    }}
+                    onFocus={() => {
+
+                      if (!selectedAsset) {
+                        setShowDropdown(true);
+                      }
+
+                    }}
+                    className={`
+                      pl-9 pr-8
+                      ${
+                        selectedAsset
+                          ? "font-mono font-bold text-primary bg-muted/30"
+                          : ""
+                      }
+                    `}
+                  />
+
+
+                  {/* CLEAR BUTTON */}
+
+                  {(selectedAsset ||
+                    assetSearch) && (
+
+                    <button
+                      type="button"
+                      onClick={
+                        handleClearAsset
+                      }
+                      className="
+                        absolute right-2.5
+                        top-2.5
+                        text-muted-foreground
+                        hover:text-foreground
+                      "
+                    >
+
+                      <X className="h-4 w-4" />
+
+                    </button>
+
+                  )}
+
+
+                  {/* DROPDOWN */}
+
+                  {showDropdown &&
+                    !selectedAsset && (
+
+                    <div
+                      className="
+                        absolute
+                        left-0 right-0
+                        top-full
+                        mt-1
+                        z-50
+                        rounded-lg
+                        border
+                        bg-card
+                        shadow-lg
+                        overflow-hidden
+                      "
+                    >
+
+                      {/* DROPDOWN HEADER */}
+
+                      <div
+                        className="
+                          p-1.5
+                          text-[11px]
+                          font-semibold
+                          uppercase
+                          tracking-wider
+                          text-muted-foreground
+                          bg-muted/30
+                          border-b
+                        "
+                      >
+                        Available Assets
+                      </div>
+
+
+                      {/* AVAILABLE ASSETS */}
+
+                      {suggestions.length > 0 ? (
+
+                        <div
+                          className="
+                            divide-y
+                            divide-border/40
+                            max-h-56
+                            overflow-y-auto
+                          "
+                        >
+
+                          {suggestions.map(
+                            (asset) => (
+
+                            <button
+                              key={asset.id}
+                              type="button"
+                              onClick={() =>
+                                handleSelectAsset(
+                                  asset
+                                )
+                              }
+                              className="
+                                w-full
+                                flex
+                                items-center
+                                justify-between
+                                px-3 py-2.5
+                                text-left
+                                text-xs
+                                hover:bg-muted/60
+                                transition-colors
+                              "
+                            >
+
+                              <div className="flex items-center gap-2">
+
+                                <Laptop
+                                  className="
+                                    h-3.5 w-3.5
+                                    text-primary
+                                    shrink-0
+                                  "
+                                />
+
+
+                                <div>
+
+                                  <span
+                                    className="
+                                      font-semibold
+                                      text-foreground
+                                    "
+                                  >
+                                    {asset.brand}
+                                  </span>
+
+                                  <span
+                                    className="
+                                      text-muted-foreground
+                                      ml-1.5
+                                    "
+                                  >
+                                    ({asset.assetType})
+                                  </span>
+
+                                </div>
+
+                              </div>
+
+
+                              <div className="flex items-center gap-2">
+
+                                <Badge
+                                  variant="success"
+                                  className="text-[10px]"
+                                >
+                                  Available
+                                </Badge>
+
+                                <span
+                                  className="
+                                    font-mono
+                                    text-[11px]
+                                    font-bold
+                                    text-primary
+                                  "
+                                >
+                                  {asset.assetId}
+                                </span>
+
+                              </div>
+
+                            </button>
+
+                          ))}
+
+                        </div>
+
+                      ) : (
+
+                        <div
+                          className="
+                            p-3
+                            text-center
+                            text-xs
+                            text-muted-foreground
+                          "
+                        >
+
+                          {assets.length === 0
+                            ? "No available assets to check out."
+                            : "No matching available assets found."}
+
+                        </div>
+
+                      )}
+
+                    </div>
+
+                  )}
+
+                </div>
+
+
+                {/* SELECTED ASSET */}
+
+                {selectedAsset && (
+
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-3
+                      rounded-md
+                      border
+                      bg-muted/20
+                      px-3 py-2
+                      mt-1
+                    "
+                  >
+
+                    <Laptop
+                      className="
+                        h-4 w-4
+                        text-primary
+                        shrink-0
+                      "
+                    />
+
+
+                    <div className="flex-1 text-xs">
+
+                      <span
+                        className="
+                          font-semibold
+                          text-foreground
+                        "
+                      >
+                        {selectedAsset.brand}
+                      </span>
+
+                      <span
+                        className="
+                          text-muted-foreground
+                          ml-1
+                        "
+                      >
+                        — {selectedAsset.assetType}
+                      </span>
+
+                      <span
+                        className="
+                          font-mono
+                          text-primary
+                          ml-2
+                        "
+                      >
+                        ({selectedAsset.assetId})
+                      </span>
+
+                    </div>
+
+
+                    <Badge
+                      variant="success"
+                      className="text-[10px]"
+                    >
+                      Available
+                    </Badge>
+
+                  </div>
+
+                )}
+
+
+                {/* ERROR */}
+
+                {errors.assetId && (
+
+                  <p
+                    className="
+                      text-xs
+                      text-destructive
+                      mt-1
+                    "
+                  >
+                    {errors.assetId}
+                  </p>
+
+                )}
+
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="customerName">Customer / Recipient *</Label>
-                <Input
-                  id="customerName"
-                  name="customerName"
-                  placeholder="Enter full name"
-                  value={formData.customerName}
-                  onChange={handleChange}
-                />
-                {errors.customerName && <p className="text-xs text-destructive">{errors.customerName}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="purpose">Purpose of Check-Out *</Label>
-                <select
-                  id="purpose"
-                  name="purpose"
-                  value={formData.purpose}
-                  onChange={handleChange}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="">Select purpose...</option>
-                  <option value="Business">Business</option>
-                  <option value="Meeting">Meeting</option>
-                  <option value="Remote Work">Remote Work</option>
-                  <option value="Delivery">Delivery</option>
-                  <option value="Other">Other</option>
-                </select>
-                {errors.purpose && <p className="text-xs text-destructive">{errors.purpose}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="expectedReturnDate">Expected Return Date</Label>
-                <Input
-                  id="expectedReturnDate"
-                  name="expectedReturnDate"
-                  type="date"
-                  value={formData.expectedReturnDate}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  name="notes"
-                  placeholder="Any accessories included (chargers, adapters)..."
-                  value={formData.notes}
-                  onChange={handleChange}
-                />
-              </div>
             </CardContent>
 
-            <div className="mx-6 mb-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800 text-xs">
-              <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
-              <div>
-                <p className="font-semibold">Check-Out Verification</p>
-                <p className="mt-0.5">Ensure asset tag, accessories, and recipient ID match before handover.</p>
-              </div>
-            </div>
 
-            <CardFooter className="flex justify-end gap-3 border-t p-4">
-              <Button type="button" variant="outline" onClick={() => navigate("/assets")}>
+            {/* FOOTER */}
+
+            <CardFooter
+              className="
+                flex
+                justify-end
+                gap-3
+                border-t
+                p-4
+              "
+            >
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  navigate("/assets")
+                }
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="gap-2">
+
+
+              <Button
+                type="submit"
+                className="gap-2"
+              >
+
                 <ArrowUpRight className="h-4 w-4" />
-                <span>Confirm Check-Out</span>
+
+                Confirm Check-Out
+
               </Button>
+
             </CardFooter>
+
           </Card>
+
         </form>
+
       </div>
+
     </DashboardLayout>
   );
 }

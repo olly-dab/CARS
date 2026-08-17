@@ -1,4 +1,5 @@
 // src/App.jsx
+
 import {
   BrowserRouter,
   Routes,
@@ -28,14 +29,42 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Toaster position="top-right" richColors closeButton />
+
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+        />
 
         <Routes>
-          {/* Public */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-          {/* Shared Protected Routes (Both Admin & Reception) */}
+          {/* =========================
+              PUBLIC ROUTES
+          ========================= */}
+
+          {/* Login page */}
+          <Route
+            path="/login"
+            element={<Login />}
+          />
+
+          {/* Start application at Login */}
+          <Route
+            path="/"
+            element={
+              <Navigate
+                to="/login"
+                replace
+              />
+            }
+          />
+
+
+          {/* =========================
+              SHARED PROTECTED ROUTES
+              ADMIN + RECEPTION
+          ========================= */}
+
           <Route
             path="/dashboard"
             element={
@@ -44,6 +73,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/assets"
             element={
@@ -52,6 +82,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/assets/:id"
             element={
@@ -60,6 +91,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/asset-history"
             element={
@@ -68,6 +100,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/assetshistory/:id"
             element={
@@ -77,49 +110,87 @@ function App() {
             }
           />
 
-          {/* RECEPTION ONLY ROUTES */}
+
+          {/* =========================
+              RECEPTION ONLY
+          ========================= */}
+
           <Route
             path="/assets/register"
             element={
-              <RoleProtectedRoute allowedRoles={["Reception"]}>
+              <RoleProtectedRoute
+                allowedRoles={["Reception"]}
+              >
                 <RegisterAsset />
               </RoleProtectedRoute>
             }
           />
+
           <Route
             path="/register-asset"
-            element={<Navigate to="/assets/register" replace />}
+            element={
+              <Navigate
+                to="/assets/register"
+                replace
+              />
+            }
           />
+
           <Route
             path="/checkout"
             element={
-              <RoleProtectedRoute allowedRoles={["Reception"]}>
+              <RoleProtectedRoute
+                allowedRoles={["Reception"]}
+              >
                 <CheckOut />
               </RoleProtectedRoute>
             }
           />
 
-          {/* ADMIN ONLY ROUTES */}
+
+          {/* =========================
+              ADMIN ONLY
+          ========================= */}
+
           <Route
             path="/reports"
             element={
-              <RoleProtectedRoute allowedRoles={["Admin"]}>
+              <RoleProtectedRoute
+                allowedRoles={["Admin"]}
+              >
                 <Reports />
               </RoleProtectedRoute>
             }
           />
+
           <Route
             path="/users"
             element={
-              <RoleProtectedRoute allowedRoles={["Admin"]}>
+              <RoleProtectedRoute
+                allowedRoles={["Admin"]}
+              >
                 <Users />
               </RoleProtectedRoute>
             }
           />
 
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+
+          {/* =========================
+              UNKNOWN URL
+          ========================= */}
+
+          <Route
+            path="*"
+            element={
+              <Navigate
+                to="/login"
+                replace
+              />
+            }
+          />
+
         </Routes>
+
       </BrowserRouter>
     </AuthProvider>
   );

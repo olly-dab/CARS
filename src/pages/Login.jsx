@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Layers, ShieldCheck, Lock, User, AlertCircle } from "lucide-react";
+import { Layers,  Lock, User, AlertCircle } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -68,16 +68,16 @@ export default function Login() {
 
           <div className="my-8">
             <h2 className="text-3xl font-bold tracking-tight mb-3">
-              Reliable Customer Asset Tracking.
+               Customer Asset Tracking.
             </h2>
             <p className="text-sm opacity-90 leading-relaxed">
-              Real-time QR code generation, movement logs, and customer management in one system.
+          Movement logs, and customer management in one system.
             </p>
           </div>
 
           <div className="flex items-center gap-2 text-xs opacity-75">
-            <ShieldCheck className="h-4 w-4" />
-            <span>Secure System Access</span>
+           
+            <span>A-mesob | Lafto Center</span>
           </div>
         </div>
 
@@ -126,7 +126,7 @@ export default function Login() {
             </div>
 
             <Button type="submit" className="w-full">
-              Sign In
+              Login
             </Button>
           </form>
 

@@ -63,58 +63,57 @@ export default function Sidebar() {
         </NavLink>
 
         <NavLink
-          to="/assets"
-          className={({ isActive }) =>
-            `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-              isActive ? "bg-blue-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-            }`
-          }
-        >
-          <Boxes className="h-4 w-4" />
-          <span>Assets</span>
-        </NavLink>
+  to="/assets"
+  end 
+  className={({ isActive }) =>
+    `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+      isActive ? "bg-blue-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+    }`
+  }
+>
+  <Boxes className="h-4 w-4" />
+  <span>Assets</span>
+</NavLink>
 
-        {/* RECEPTION ONLY: Register Asset & Check-Out */}
-        {currentUser?.role === "Reception" && (
-          <>
-            <NavLink
-              to="/assets/register"
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive ? "bg-blue-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                }`
-              }
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span>Register Asset</span>
-            </NavLink>
+{currentUser?.role === "Reception" && (
+  <>
+    <NavLink
+      to="/assets/register"
+      className={({ isActive }) =>
+        `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+          isActive ? "bg-blue-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+        }`
+      }
+    >
+      <PlusCircle className="h-4 w-4" />
+      <span>Register Asset</span>
+    </NavLink>
 
-            <NavLink
-              to="/checkout"
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive ? "bg-blue-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                }`
-              }
-            >
-              <ArrowUpRight className="h-4 w-4" />
-              <span>Check-Out</span>
-            </NavLink>
-          </>
-        )}
+    <NavLink
+      to="/checkout"
+      className={({ isActive }) =>
+        `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+          isActive ? "bg-blue-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+        }`
+      }
+    >
+      <ArrowUpRight className="h-4 w-4" />
+      <span>Check-Out</span>
+    </NavLink>
+  </>
+)}
 
-        {/* Available to Both */}
-        <NavLink
-          to="/asset-history"
-          className={({ isActive }) =>
-            `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-              isActive ? "bg-blue-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-            }`
-          }
-        >
-          <History className="h-4 w-4" />
-          <span>Asset History</span>
-        </NavLink>
+<NavLink
+  to="/asset-history"
+  className={({ isActive }) =>
+    `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+      isActive ? "bg-blue-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+    }`
+  }
+>
+  <History className="h-4 w-4" />
+  <span>Asset History</span>
+</NavLink>
 
         {/* ADMIN ONLY: Reports & Users */}
         {currentUser?.role === "Admin" && (
@@ -157,7 +156,7 @@ export default function Sidebar() {
           className="flex w-full items-center justify-center gap-2 rounded-md bg-red-950/40 border border-red-800/40 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-900/50 hover:text-red-300 transition-colors"
         >
           <LogOut className="h-4 w-4" />
-          <span>Sign Out</span>
+          <span>LogOut</span>
         </button>
       </div>
     </aside>
