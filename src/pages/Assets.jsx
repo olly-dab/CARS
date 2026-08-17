@@ -49,11 +49,18 @@ export default function Assets() {
   // LOAD ALL REGISTERED ASSETS
   // --------------------------------------------------
   const loadAssets = useCallback(() => {
-    const savedAssets =
-      JSON.parse(localStorage.getItem("cars_assets")) || [];
+  const savedAssets =
+    JSON.parse(localStorage.getItem("cars_assets")) || [];
 
-    setAssets(savedAssets);
-  }, []);
+  // Newest registered asset first
+  const sortedAssets = [...savedAssets].sort(
+    (a, b) =>
+      new Date(b.registeredDate || 0) -
+      new Date(a.registeredDate || 0)
+  );
+
+  setAssets(sortedAssets);
+}, []);
 
   useEffect(() => {
     loadAssets();
