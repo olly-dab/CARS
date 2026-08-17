@@ -1,5 +1,3 @@
-// src/pages/RegisterAsset.jsx
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -26,7 +24,6 @@ import {
   Sparkles,
 } from "lucide-react";
 
-
 // ======================================================
 // GENERATE ASSET ID
 // ======================================================
@@ -51,7 +48,6 @@ const generateAssetId = (type = "") => {
   return `CARS-${prefix}-${randomCode}`;
 };
 
-
 // ======================================================
 // REGISTER ASSET
 // ======================================================
@@ -59,16 +55,21 @@ const generateAssetId = (type = "") => {
 export default function RegisterAsset() {
   const navigate = useNavigate();
 
+  // ======================================================
+  // FORM DATA
+  // ======================================================
+
   const [formData, setFormData] = useState({
     assetType: "",
     assetId: generateAssetId(),
     brand: "",
+    customerName: "",
+    phoneNumber: "",
     serialNumber: "",
     status: "Available",
   });
 
   const [errors, setErrors] = useState({});
-
 
   // ======================================================
   // HANDLE INPUT CHANGE
@@ -77,6 +78,7 @@ export default function RegisterAsset() {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // Generate a new asset ID when asset type changes
     if (name === "assetType") {
       setFormData((prev) => ({
         ...prev,
@@ -90,6 +92,7 @@ export default function RegisterAsset() {
       }));
     }
 
+    // Clear error for the field being edited
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -97,7 +100,6 @@ export default function RegisterAsset() {
       }));
     }
   };
-
 
   // ======================================================
   // REGENERATE ASSET ID
@@ -113,11 +115,8 @@ export default function RegisterAsset() {
       assetId: newId,
     }));
 
-    toast.info(
-      `Generated new ID: ${newId}`
-    );
+    toast.info(`Generated new ID: ${newId}`);
   };
-
 
   // ======================================================
   // VALIDATION
@@ -141,6 +140,16 @@ export default function RegisterAsset() {
         "Brand is required.";
     }
 
+    if (!formData.customerName.trim()) {
+      newErrors.customerName =
+        "Customer name is required.";
+    }
+
+    if (!formData.phoneNumber.trim()) {
+      newErrors.phoneNumber =
+        "Phone number is required.";
+    }
+
     if (!formData.serialNumber.trim()) {
       newErrors.serialNumber =
         "Serial number is required.";
@@ -149,7 +158,6 @@ export default function RegisterAsset() {
     return newErrors;
   };
 
-
   // ======================================================
   // SUBMIT
   // ======================================================
@@ -157,64 +165,70 @@ export default function RegisterAsset() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // --------------------------------------------
-    // VALIDATE
-    // --------------------------------------------
+    // --------------------------------------------------
+    // VALIDATE FORM
+    // --------------------------------------------------
 
     const validationErrors = validate();
 
-    if (
-      Object.keys(validationErrors).length > 0
-    ) {
+    if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-
-    // --------------------------------------------
+    // --------------------------------------------------
     // GET EXISTING ASSETS
-    // --------------------------------------------
+    // --------------------------------------------------
 
     const existingAssets =
       JSON.parse(
         localStorage.getItem("cars_assets")
       ) || [];
 
+    // --------------------------------------------------
+    // CHECK ASSET ID
+    // --------------------------------------------------
 
-    // --------------------------------------------
-    // MAKE SURE ASSET ID IS UNIQUE
-    // --------------------------------------------
+    let assetId = formData.assetId.trim();
 
-    let assetId = formData.assetId;
-
-    const assetIdExists =
-      existingAssets.some(
-        (asset) =>
-          asset.assetId?.toLowerCase() ===
-          assetId.toLowerCase()
-      );
+    const assetIdExists = existingAssets.some(
+      (asset) =>
+        asset.assetId?.toLowerCase() ===
+        assetId.toLowerCase()
+    );
 
     if (assetIdExists) {
       assetId = generateAssetId(
         formData.assetType
       );
+
+      // Make absolutely sure regenerated ID is unique
+      while (
+        existingAssets.some(
+          (asset) =>
+            asset.assetId?.toLowerCase() ===
+            assetId.toLowerCase()
+        )
+      ) {
+        assetId = generateAssetId(
+          formData.assetType
+        );
+      }
     }
 
-
-    // --------------------------------------------
+    // --------------------------------------------------
     // CHECK SERIAL NUMBER
-    // --------------------------------------------
+    // --------------------------------------------------
 
-    const serialExists =
-      existingAssets.some(
-        (asset) =>
-          asset.serialNumber
-            ?.trim()
-            .toLowerCase() ===
-          formData.serialNumber
-            .trim()
-            .toLowerCase()
-      );
+    const serialExists = existingAssets.some(
+      (asset) =>
+        asset.serialNumber
+          ?.trim()
+          .toLowerCase() ===
+        formData.serialNumber
+          .trim()
+          .toLowerCase()
+    );
 
     if (serialExists) {
       setErrors({
@@ -225,6 +239,12 @@ export default function RegisterAsset() {
       return;
     }
 
+    // ==================================================
+    // REGISTRATION DATE & TIME
+    // ==================================================
+
+    const registrationDate =
+      new Date().toISOString();
 
     // ==================================================
     // CREATE NEW ASSET
@@ -242,16 +262,22 @@ export default function RegisterAsset() {
       brand:
         formData.brand.trim(),
 
+      customerName:
+        formData.customerName.trim(),
+
+      phoneNumber:
+        formData.phoneNumber.trim(),
+
       serialNumber:
         formData.serialNumber.trim(),
 
-      // New assets are ALWAYS available
+      // New assets always start as Available
       status: "Available",
 
+      // Save exact registration date and time
       registeredDate:
-        new Date().toISOString(),
+        registrationDate,
     };
-
 
     // ==================================================
     // SAVE ASSET
@@ -267,9 +293,8 @@ export default function RegisterAsset() {
       JSON.stringify(updatedAssets)
     );
 
-
     // ==================================================
-    // CREATE ASSET HISTORY RECORD
+    // GET EXISTING HISTORY
     // ==================================================
 
     const existingHistory =
@@ -279,6 +304,9 @@ export default function RegisterAsset() {
         )
       ) || [];
 
+    // ==================================================
+    // CREATE REGISTRATION HISTORY
+    // ==================================================
 
     const registrationHistory = {
       id: Date.now() + 1,
@@ -289,16 +317,20 @@ export default function RegisterAsset() {
       assetName:
         `${newAsset.brand} (${newAsset.assetType})`,
 
-      // WHAT HAPPENED?
       action: "Registered",
 
-      // CURRENT STATUS AFTER ACTION
       status: "Available",
 
       date:
-        new Date().toISOString(),
-    };
+        registrationDate,
 
+      // Keep customer information in history too
+      customerName:
+        newAsset.customerName,
+
+      phoneNumber:
+        newAsset.phoneNumber,
+    };
 
     // ==================================================
     // SAVE HISTORY
@@ -314,20 +346,20 @@ export default function RegisterAsset() {
       JSON.stringify(updatedHistory)
     );
 
-
     // ==================================================
-    // SUCCESS
+    // SUCCESS MESSAGE
     // ==================================================
 
     toast.success(
-      `Asset "${newAsset.brand}" (${newAsset.assetId}) registered successfully!`
+      `Asset "${newAsset.assetId}" registered successfully!`
     );
 
+    // ==================================================
+    // RETURN TO ASSETS
+    // ==================================================
 
-    // Go to Assets
     navigate("/assets");
   };
-
 
   // ======================================================
   // UI
@@ -338,7 +370,9 @@ export default function RegisterAsset() {
 
       <div className="max-w-2xl mx-auto space-y-6">
 
-        {/* HEADER */}
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
         <div className="flex items-center justify-between">
 
@@ -353,7 +387,6 @@ export default function RegisterAsset() {
             </p>
 
           </div>
-
 
           <Button
             variant="ghost"
@@ -371,8 +404,9 @@ export default function RegisterAsset() {
 
         </div>
 
-
-        {/* FORM */}
+        {/* =================================================
+            FORM
+        ================================================= */}
 
         <form onSubmit={handleSubmit}>
 
@@ -385,15 +419,16 @@ export default function RegisterAsset() {
               </CardTitle>
 
               <CardDescription>
-                Primary hardware identification
+                Enter the asset and customer information.
               </CardDescription>
 
             </CardHeader>
 
-
             <CardContent className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
-              {/* ASSET TYPE */}
+              {/* =================================================
+                  ASSET TYPE
+              ================================================= */}
 
               <div className="space-y-2 sm:col-span-2">
 
@@ -443,8 +478,9 @@ export default function RegisterAsset() {
 
               </div>
 
-
-              {/* ASSET ID */}
+              {/* =================================================
+                  ASSET ID
+              ================================================= */}
 
               <div className="space-y-2 sm:col-span-2">
 
@@ -469,7 +505,6 @@ export default function RegisterAsset() {
 
                 </div>
 
-
                 <div className="flex gap-2">
 
                   <Input
@@ -484,7 +519,6 @@ export default function RegisterAsset() {
                       cursor-not-allowed
                     "
                   />
-
 
                   <Button
                     type="button"
@@ -509,8 +543,9 @@ export default function RegisterAsset() {
 
               </div>
 
-
-              {/* BRAND */}
+              {/* =================================================
+                  BRAND
+              ================================================= */}
 
               <div className="space-y-2">
 
@@ -533,56 +568,10 @@ export default function RegisterAsset() {
                 )}
 
               </div>
-              {/* CUSTOMER NAME */}
 
-              <div className="space-y-2">
-
-                <Label htmlFor="customerName">
-                  Customer Name *
-                </Label>
-
-                <Input
-                  id="customerName"
-                  name="customerName"
-                  placeholder="e.g. John Doe"
-                  value={formData.customerName}
-                  onChange={handleChange}
-                />
-
-                {errors.customerName && (
-                  <p className="text-xs text-destructive">
-                    {errors.customerName}
-                  </p>
-                )}
-
-              </div>
-              {/* PHONE NUMBER*/}
-              <div className="space-y-2">
-
-                <Label htmlFor="phoneNumber">
-                  Phone Number *
-                </Label>
-
-                <Input
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  placeholder="e.g. 123-456-7890"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                />
-
-                {errors.phoneNumber && (
-                  <p className="text-xs text-destructive">
-                    {errors.phoneNumber}
-                  </p>
-                )}
-
-              </div>
-
-
-
-
-              {/* SERIAL NUMBER */}
+              {/* =================================================
+                  SERIAL NUMBER
+              ================================================= */}
 
               <div className="space-y-2">
 
@@ -606,10 +595,69 @@ export default function RegisterAsset() {
 
               </div>
 
+              {/* =================================================
+                  CUSTOMER NAME
+              ================================================= */}
+
+              <div className="space-y-2">
+
+                <Label htmlFor="customerName">
+                  Customer Name *
+                </Label>
+
+                <Input
+                  id="customerName"
+                  name="customerName"
+                  placeholder="e.g. John Doe"
+                  value={formData.customerName}
+                  onChange={handleChange}
+                />
+
+                {errors.customerName && (
+                  <p className="text-xs text-destructive">
+                    {errors.customerName}
+                  </p>
+                )}
+
+              </div>
+
+              {/* =================================================
+                  PHONE NUMBER
+              ================================================= */}
+
+              <div className="space-y-2">
+
+                <Label htmlFor="phoneNumber">
+                  Phone Number *
+                </Label>
+
+                <Input
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  type="tel"
+                  placeholder="e.g. 0912345678"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                />
+
+                {errors.phoneNumber && (
+                  <p className="text-xs text-destructive">
+                    {errors.phoneNumber}
+                  </p>
+                )}
+
+              </div>
+
+              {/* =================================================
+                  INITIAL STATUS
+              ================================================= */}
+
+              
             </CardContent>
 
-
-            {/* FOOTER */}
+            {/* =================================================
+                FOOTER
+            ================================================= */}
 
             <CardFooter
               className="
@@ -625,7 +673,6 @@ export default function RegisterAsset() {
               >
                 Cancel
               </Button>
-
 
               <Button
                 type="submit"
