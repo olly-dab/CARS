@@ -61,6 +61,17 @@ export default function Sidebar() {
           <LayoutDashboard className="h-4 w-4" />
           <span>Dashboard</span>
         </NavLink>
+        <NavLink
+      to="/assets/register"
+      className={({ isActive }) =>
+        `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+          isActive ? "bg-blue-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+        }`
+      }
+    >
+      <PlusCircle className="h-4 w-4" />
+      <span>Register Asset</span>
+    </NavLink>
 
         <NavLink
   to="/assets"
@@ -77,17 +88,7 @@ export default function Sidebar() {
 
 {currentUser?.role === "Reception" && (
   <>
-    <NavLink
-      to="/assets/register"
-      className={({ isActive }) =>
-        `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-          isActive ? "bg-blue-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-        }`
-      }
-    >
-      <PlusCircle className="h-4 w-4" />
-      <span>Register Asset</span>
-    </NavLink>
+    
 
     <NavLink
       to="/checkout"
