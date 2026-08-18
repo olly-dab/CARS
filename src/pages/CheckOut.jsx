@@ -769,7 +769,7 @@ export default function CheckOut() {
 
                 <ArrowUpRight className="h-4 w-4" />
 
-                Confirm Check-Out
+                Check-Out
 
               </Button>
 
