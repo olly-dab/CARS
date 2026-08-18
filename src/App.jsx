@@ -27,6 +27,7 @@ import Assets from "./pages/Assets";
 import Reports from "./pages/Reports";
 import Users from "./pages/Users";
 import Profile from "./pages/Profile";
+import EditAsset from "./pages/EditAsset";
 
 // ======================================================
 // ROUTE GUARDS
@@ -68,6 +69,14 @@ function App() {
               />
             }
           />
+          <Route
+  path="/assets/:id/edit"
+  element={
+    <ProtectedRoute>
+      <EditAsset />
+    </ProtectedRoute>
+  }
+/>
           {/* =========================
     CHECKOUT
     ADMIN + RECEPTION

@@ -1,7 +1,10 @@
 // src/pages/Assets.jsx
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
@@ -35,6 +38,7 @@ import {
   Laptop,
   Eye,
   Filter,
+  Pencil,
 } from "lucide-react";
 
 export default function Assets() {
@@ -44,9 +48,12 @@ export default function Assets() {
   // =====================================================
   // URL STATUS FILTER
   // =====================================================
-const [searchParams] = useSearchParams();
 
-const statusFilter = searchParams.get("status");
+  const [searchParams, setSearchParams] =
+    useSearchParams();
+
+  const statusFilter =
+    searchParams.get("status");
 
   // =====================================================
   // STATE
@@ -64,12 +71,25 @@ const statusFilter = searchParams.get("status");
   // =====================================================
 
   const loadAssets = useCallback(() => {
-    const savedAssets =
-      JSON.parse(
-        localStorage.getItem("cars_assets")
-      ) || [];
+    try {
+      const savedAssets =
+        JSON.parse(
+          localStorage.getItem("cars_assets")
+        ) || [];
 
-    setAssets(savedAssets);
+      setAssets(
+        Array.isArray(savedAssets)
+          ? savedAssets
+          : []
+      );
+    } catch (error) {
+      console.error(
+        "Unable to load assets:",
+        error
+      );
+
+      setAssets([]);
+    }
   }, []);
 
   // =====================================================
@@ -83,15 +103,29 @@ const statusFilter = searchParams.get("status");
       loadAssets();
     };
 
+    const handleStorage = () => {
+      loadAssets();
+    };
+
     window.addEventListener(
       "focus",
       handleFocus
+    );
+
+    window.addEventListener(
+      "storage",
+      handleStorage
     );
 
     return () => {
       window.removeEventListener(
         "focus",
         handleFocus
+      );
+
+      window.removeEventListener(
+        "storage",
+        handleStorage
       );
     };
   }, [loadAssets]);
@@ -126,7 +160,7 @@ const statusFilter = searchParams.get("status");
   }, []);
 
   // =====================================================
-  // FILTER BY STATUS
+  // STATUS FILTER
   // =====================================================
 
   const statusFilteredAssets = assets.filter(
@@ -146,80 +180,85 @@ const statusFilter = searchParams.get("status");
   const searchValue =
     search.toLowerCase().trim();
 
- const filteredAssets = assets
-  .filter((asset) => {
-    // -----------------------------------------
-    // STATUS FILTER FROM DASHBOARD
-    // -----------------------------------------
-    if (statusFilter && asset.status !== statusFilter) {
-      return false;
-    }
+  const filteredAssets = assets
+    .filter((asset) => {
+      // Status filter
+      if (
+        statusFilter &&
+        asset.status !== statusFilter
+      ) {
+        return false;
+      }
 
-    return true;
-  })
-  .filter((asset) => {
-    // -----------------------------------------
-    // SEARCH FILTER
-    // -----------------------------------------
-    return (
-      asset.assetId
-        ?.toLowerCase()
-        .includes(searchValue) ||
-      asset.assetType
-        ?.toLowerCase()
-        .includes(searchValue) ||
-      asset.brand
-        ?.toLowerCase()
-        .includes(searchValue) ||
-      asset.serialNumber
-        ?.toLowerCase()
-        .includes(searchValue) ||
-      asset.status
-        ?.toLowerCase()
-        .includes(searchValue)
-    );
-  });
+      return true;
+    })
+    .filter((asset) => {
+      // Search filter
+      if (!searchValue) {
+        return true;
+      }
+
+      return (
+        asset.assetId
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        asset.assetType
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        asset.brand
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        asset.serialNumber
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        asset.status
+          ?.toLowerCase()
+          .includes(searchValue)
+      );
+    });
 
   // =====================================================
   // SORT LATEST ASSET FIRST
   // =====================================================
 
-  const sortedAssets =
-    filteredAssets
-      .slice()
-      .sort(
-        (a, b) =>
-          new Date(
-            b.registeredDate || 0
-          ) -
-          new Date(
-            a.registeredDate || 0
-          )
-      );
+  const sortedAssets = filteredAssets
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(
+          b.registeredDate || 0
+        ) -
+        new Date(
+          a.registeredDate || 0
+        )
+    );
 
   // =====================================================
   // SEARCH SUGGESTIONS
   // =====================================================
 
-  const suggestions =
-    statusFilteredAssets
-      .filter((asset) => {
-        return (
-          asset.assetId
-            ?.toLowerCase()
-            .includes(searchValue) ||
-          asset.brand
-            ?.toLowerCase()
-            .includes(searchValue) ||
-          asset.assetType
-            ?.toLowerCase()
-            .includes(searchValue) ||
-          asset.serialNumber
-            ?.toLowerCase()
-            .includes(searchValue)
-        );
-      })
-      .slice(0, 6);
+  const suggestions = statusFilteredAssets
+    .filter((asset) => {
+      if (!searchValue) {
+        return false;
+      }
+
+      return (
+        asset.assetId
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        asset.brand
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        asset.assetType
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        asset.serialNumber
+          ?.toLowerCase()
+          .includes(searchValue)
+      );
+    })
+    .slice(0, 6);
 
   // =====================================================
   // STATUS BADGE
@@ -240,7 +279,7 @@ const statusFilter = searchParams.get("status");
   };
 
   // =====================================================
-  // SELECT SUGGESTION
+  // SELECT SEARCH SUGGESTION
   // =====================================================
 
   const handleSelectSuggestion = (asset) => {
@@ -264,6 +303,7 @@ const statusFilter = searchParams.get("status");
   const handleClearFilter = () => {
     setSearchParams({});
     setSearch("");
+    setShowSuggestions(false);
   };
 
   // =====================================================
@@ -272,7 +312,18 @@ const statusFilter = searchParams.get("status");
 
   const handleViewAsset = (asset) => {
     navigate(
-      `/assets/${asset.id}`
+      `/assets/${asset.id || asset.assetId}`
+    );
+  };
+
+  // =====================================================
+  // EDIT ASSET
+  // Reception Only
+  // =====================================================
+
+  const handleEditAsset = (asset) => {
+    navigate(
+      `/assets/${asset.id || asset.assetId}/edit`
     );
   };
 
@@ -314,7 +365,6 @@ const statusFilter = searchParams.get("status");
 
   return (
     <DashboardLayout>
-
       <div className="space-y-6">
 
         {/* =================================================
@@ -328,20 +378,14 @@ const statusFilter = searchParams.get("status");
             <div className="flex items-center gap-3">
 
               <h1 className="text-3xl font-bold tracking-tight">
-  {statusFilter === "Available"
-    ? "Available Assets"
-    : statusFilter === "Checked Out"
-    ? "Checked Out Assets"
-    : "Assets"}
-</h1>
+                {getPageTitle()}
+              </h1>
 
               {statusFilter && (
                 <Badge
-                  variant={
-                    getStatusVariant(
-                      statusFilter
-                    )
-                  }
+                  variant={getStatusVariant(
+                    statusFilter
+                  )}
                 >
                   {statusFilter}
                 </Badge>
@@ -349,17 +393,15 @@ const statusFilter = searchParams.get("status");
 
             </div>
 
-           <p className="text-sm text-muted-foreground">
-  {statusFilter === "Available"
-    ? "View all currently available assets."
-    : statusFilter === "Checked Out"
-    ? "View all currently checked out assets."
-    : "View and manage all assets registered in the organisation."}
-</p>
+            <p className="text-sm text-muted-foreground">
+              {getPageDescription()}
+            </p>
 
           </div>
 
-          {/* RIGHT SIDE BUTTONS */}
+          {/* =================================================
+              RIGHT SIDE BUTTONS
+          ================================================= */}
 
           <div className="flex items-center gap-2">
 
@@ -368,9 +410,7 @@ const statusFilter = searchParams.get("status");
             {statusFilter && (
               <Button
                 variant="outline"
-                onClick={
-                  handleClearFilter
-                }
+                onClick={handleClearFilter}
                 className="gap-2"
               >
                 <X className="h-4 w-4" />
@@ -378,7 +418,7 @@ const statusFilter = searchParams.get("status");
               </Button>
             )}
 
-            {/* REGISTER */}
+            {/* REGISTER ASSET - RECEPTION ONLY */}
 
             {currentUser?.role ===
               "Reception" && (
@@ -396,9 +436,7 @@ const statusFilter = searchParams.get("status");
             )}
 
           </div>
-
         </div>
-
 
         {/* =================================================
             REGISTRY CARD
@@ -446,15 +484,12 @@ const statusFilter = searchParams.get("status");
 
             </div>
 
-
             {/* =================================================
                 SEARCH
             ================================================= */}
 
             <div
-              ref={
-                searchContainerRef
-              }
+              ref={searchContainerRef}
               className="relative w-full sm:w-80"
             >
 
@@ -474,14 +509,13 @@ const statusFilter = searchParams.get("status");
                   setSearch(
                     e.target.value
                   );
+
                   setShowSuggestions(
                     true
                   );
                 }}
                 onFocus={() => {
-                  if (
-                    search.trim()
-                  ) {
+                  if (search.trim()) {
                     setShowSuggestions(
                       true
                     );
@@ -509,16 +543,13 @@ const statusFilter = searchParams.get("status");
                 </button>
               )}
 
-
               {/* =================================================
                   SEARCH SUGGESTIONS
               ================================================= */}
 
               {showSuggestions &&
                 search.trim() &&
-                suggestions.length >
-                  0 && (
-
+                suggestions.length > 0 && (
                   <div
                     className="
                       absolute
@@ -560,7 +591,6 @@ const statusFilter = searchParams.get("status");
 
                       {suggestions.map(
                         (asset) => (
-
                           <button
                             key={
                               asset.id ||
@@ -624,20 +654,15 @@ const statusFilter = searchParams.get("status");
                             </span>
 
                           </button>
-
                         )
                       )}
 
                     </div>
-
                   </div>
-
                 )}
 
             </div>
-
           </CardHeader>
-
 
           {/* =================================================
               TABLE
@@ -645,227 +670,258 @@ const statusFilter = searchParams.get("status");
 
           <CardContent className="p-0">
 
-            <Table>
+            <div className="w-full overflow-x-auto">
 
-              <TableHeader>
+              <Table>
 
-                <TableRow>
-
-                  <TableHead>
-                    Asset ID
-                  </TableHead>
-
-                  <TableHead>
-                    Asset Type
-                  </TableHead>
-
-                  <TableHead>
-                    Brand
-                  </TableHead>
-
-                  <TableHead>
-                    Serial Number
-                  </TableHead>
-
-                  <TableHead>
-                    Registered
-                  </TableHead>
-
-                  <TableHead>
-                    Status
-                  </TableHead>
-
-                  <TableHead className="text-right">
-                    Action
-                  </TableHead>
-
-                </TableRow>
-
-              </TableHeader>
-
-
-              <TableBody>
-
-                {sortedAssets.length >
-                0 ? (
-
-                  sortedAssets.map(
-                    (asset) => (
-
-                      <TableRow
-                        key={
-                          asset.id ||
-                          asset.assetId
-                        }
-                      >
-
-                        {/* ASSET ID */}
-
-                        <TableCell
-                          className="
-                            font-bold
-                            text-primary
-                            font-mono
-                          "
-                        >
-                          {asset.assetId}
-                        </TableCell>
-
-
-                        {/* ASSET TYPE */}
-
-                        <TableCell className="font-medium">
-                          {asset.assetType ||
-                            "Equipment"}
-                        </TableCell>
-
-
-                        {/* BRAND */}
-
-                        <TableCell>
-                          {asset.brand ||
-                            "-"}
-                        </TableCell>
-
-
-                        {/* SERIAL NUMBER */}
-
-                        <TableCell
-                          className="
-                            font-mono
-                            text-xs
-                            text-muted-foreground
-                          "
-                        >
-                          {asset.serialNumber ||
-                            "-"}
-                        </TableCell>
-
-
-                        {/* REGISTERED DATE + TIME */}
-
-                        <TableCell
-                          className="
-                            text-xs
-                            text-muted-foreground
-                            whitespace-nowrap
-                          "
-                        >
-                          {asset.registeredDate
-                            ? new Date(
-                                asset.registeredDate
-                              ).toLocaleString()
-                            : "-"}
-                        </TableCell>
-
-
-                        {/* STATUS */}
-
-                        <TableCell>
-
-                          <Badge
-                            variant={getStatusVariant(
-                              asset.status
-                            )}
-                          >
-                            {asset.status ||
-                              "Available"}
-                          </Badge>
-
-                        </TableCell>
-
-
-                        {/* VIEW */}
-
-                        <TableCell className="text-right">
-
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleViewAsset(
-                                asset
-                              )
-                            }
-                            className="gap-1.5"
-                          >
-
-                            <Eye className="h-4 w-4" />
-
-                            View
-
-                          </Button>
-
-                        </TableCell>
-
-                      </TableRow>
-
-                    )
-                  )
-
-                ) : (
+                <TableHeader>
 
                   <TableRow>
 
-                    <TableCell
-                      colSpan={7}
-                      className="
-                        text-center
-                        py-12
-                      "
-                    >
+                    <TableHead>
+                      Asset ID
+                    </TableHead>
 
-                      <Boxes
-                        className="
-                          mx-auto
-                          h-8 w-8
-                          text-muted-foreground/40
-                          mb-2
-                        "
-                      />
+                    <TableHead>
+                      Asset Type
+                    </TableHead>
 
-                      <p
-                        className="
-                          text-sm
-                          font-semibold
-                          text-foreground
-                        "
-                      >
-                        No assets found
-                      </p>
+                    <TableHead>
+                      Brand
+                    </TableHead>
 
-                      <p
-                        className="
-                          text-xs
-                          text-muted-foreground
-                          mt-1
-                        "
-                      >
+                    <TableHead>
+                      Serial Number
+                    </TableHead>
 
-                        {statusFilter
-                          ? `There are no ${statusFilter.toLowerCase()} assets.`
-                          : search
-                          ? "Try searching with a different keyword."
-                          : "Register an asset to see it listed here."}
+                    <TableHead>
+                      Registered
+                    </TableHead>
 
-                      </p>
+                    <TableHead>
+                      Status
+                    </TableHead>
 
-                    </TableCell>
+                    <TableHead className="text-right">
+                      Action
+                    </TableHead>
 
                   </TableRow>
 
-                )}
+                </TableHeader>
 
-              </TableBody>
+                <TableBody>
 
-            </Table>
+                  {sortedAssets.length > 0 ? (
+                    sortedAssets.map(
+                      (asset) => (
+                        <TableRow
+                          key={
+                            asset.id ||
+                            asset.assetId
+                          }
+                        >
+
+                          {/* ASSET ID */}
+
+                          <TableCell
+                            className="
+                              font-bold
+                              text-primary
+                              font-mono
+                            "
+                          >
+                            {asset.assetId ||
+                              asset.id ||
+                              "-"}
+                          </TableCell>
+
+                          {/* ASSET TYPE */}
+
+                          <TableCell className="font-medium">
+                            {asset.assetType ||
+                              "Equipment"}
+                          </TableCell>
+
+                          {/* BRAND */}
+
+                          <TableCell>
+                            {asset.brand ||
+                              "-"}
+                          </TableCell>
+
+                          {/* SERIAL NUMBER */}
+
+                          <TableCell
+                            className="
+                              font-mono
+                              text-xs
+                              text-muted-foreground
+                            "
+                          >
+                            {asset.serialNumber ||
+                              "-"}
+                          </TableCell>
+
+                          {/* REGISTERED DATE */}
+
+                          <TableCell
+                            className="
+                              text-xs
+                              text-muted-foreground
+                              whitespace-nowrap
+                            "
+                          >
+                            {asset.registeredDate
+                              ? new Date(
+                                  asset.registeredDate
+                                ).toLocaleString()
+                              : "-"}
+                          </TableCell>
+
+                          {/* STATUS */}
+
+                          <TableCell>
+
+                            <Badge
+                              variant={getStatusVariant(
+                                asset.status
+                              )}
+                            >
+                              {asset.status ||
+                                "Available"}
+                            </Badge>
+
+                          </TableCell>
+
+                          {/* ACTIONS */}
+
+                          <TableCell>
+
+                            <div className="flex items-center justify-end gap-1">
+
+                              {/* VIEW */}
+
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleViewAsset(
+                                    asset
+                                  )
+                                }
+                                className="gap-1.5"
+                              >
+                                <Eye className="h-4 w-4" />
+                                View
+                              </Button>
+
+                              {/* EDIT - RECEPTION ONLY */}
+
+                              {currentUser?.role ===
+                                "Reception" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleEditAsset(
+                                      asset
+                                    )
+                                  }
+                                  className="gap-1.5"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  Edit
+                                </Button>
+                              )}
+
+                            </div>
+
+                          </TableCell>
+
+                        </TableRow>
+                      )
+                    )
+                  ) : (
+
+                    <TableRow>
+
+                      <TableCell
+                        colSpan={7}
+                        className="
+                          text-center
+                          py-12
+                        "
+                      >
+
+                        <Boxes
+                          className="
+                            mx-auto
+                            h-8 w-8
+                            text-muted-foreground/40
+                            mb-2
+                          "
+                        />
+
+                        <p
+                          className="
+                            text-sm
+                            font-semibold
+                            text-foreground
+                          "
+                        >
+                          No assets found
+                        </p>
+
+                        <p
+                          className="
+                            text-xs
+                            text-muted-foreground
+                            mt-1
+                          "
+                        >
+                          {statusFilter
+                            ? `There are no ${statusFilter.toLowerCase()} assets.`
+                            : search
+                            ? "Try searching with a different keyword."
+                            : "Register an asset to see it listed here."}
+                        </p>
+
+                        {/* REGISTER BUTTON IN EMPTY STATE */}
+
+                        {!statusFilter &&
+                          !search &&
+                          currentUser?.role ===
+                            "Reception" && (
+                            <Button
+                              className="mt-4 gap-2"
+                              onClick={() =>
+                                navigate(
+                                  "/assets/register"
+                                )
+                              }
+                            >
+                              <Plus className="h-4 w-4" />
+                              Register Asset
+                            </Button>
+                          )}
+
+                      </TableCell>
+
+                    </TableRow>
+                  )}
+
+                </TableBody>
+
+              </Table>
+
+            </div>
 
           </CardContent>
 
         </Card>
 
       </div>
-
     </DashboardLayout>
   );
 }
