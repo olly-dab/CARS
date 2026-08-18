@@ -76,7 +76,10 @@ function App() {
       <EditAsset />
     </ProtectedRoute>
   }
+  
 />
+ 
+   
           {/* =========================
     CHECKOUT
     ADMIN + RECEPTION
