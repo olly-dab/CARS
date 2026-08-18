@@ -30,22 +30,9 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 px-6 shadow-sm backdrop-blur">
 
-      {/* LEFT */}
+      
 
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-
-        <span>
-          Customer Asset Tracking
-        </span>
-
-        <span>/</span>
-
-        <span className="font-semibold capitalize text-foreground">
-          Workspace
-        </span>
-
-      </div>
-
+      
 
       {/* RIGHT */}
 

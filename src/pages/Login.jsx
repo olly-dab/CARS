@@ -139,9 +139,7 @@ export default function Login() {
                 CARS
               </h1>
 
-              <p className="text-xs opacity-80">
-                Asset Management
-              </p>
+             
 
             </div>
 
@@ -156,10 +154,7 @@ export default function Login() {
               Customer Asset Registration.
             </h2>
 
-            <p className="text-sm opacity-90 leading-relaxed">
-              Movement logs, and customer management
-              in one system.
-            </p>
+           
 
           </div>
 
@@ -191,9 +186,7 @@ export default function Login() {
               Sign In
             </h2>
 
-            <p className="text-sm text-muted-foreground mt-1">
-              Enter your operator credentials
-            </p>
+            
 
           </div>
 

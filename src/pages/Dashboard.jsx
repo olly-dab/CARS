@@ -3,6 +3,7 @@
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
 
+
 import {
   Card,
   CardHeader,
@@ -150,9 +151,7 @@ export default function Dashboard() {
               Dashboard
             </h1>
 
-            <p className="text-sm text-muted-foreground mt-1">
-              Overview of customer assets and their current status.
-            </p>
+            
           </div>
 
           <Badge
@@ -202,10 +201,7 @@ export default function Dashboard() {
                 {assets.length}
               </div>
 
-              <p className="text-xs text-muted-foreground mt-1">
-                View all registered assets
-              </p>
-
+              
             </CardContent>
 
           </Card>
@@ -245,9 +241,7 @@ export default function Dashboard() {
                 {checkedOutCount}
               </div>
 
-              <p className="text-xs text-muted-foreground mt-1">
-                View checked-out assets
-              </p>
+             
 
             </CardContent>
 
@@ -288,9 +282,7 @@ export default function Dashboard() {
                 {availableCount}
               </div>
 
-              <p className="text-xs text-muted-foreground mt-1">
-                View available assets
-              </p>
+             
 
             </CardContent>
 
@@ -323,9 +315,7 @@ export default function Dashboard() {
 
               </CardTitle>
 
-              <CardDescription>
-                Ratio of available vs. checked out items
-              </CardDescription>
+              
 
             </CardHeader>
 
@@ -412,10 +402,7 @@ export default function Dashboard() {
 
               </CardTitle>
 
-              <CardDescription>
-                Inventory distribution across hardware types
-              </CardDescription>
-
+              
             </CardHeader>
 
             <CardContent>

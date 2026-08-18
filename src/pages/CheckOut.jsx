@@ -357,9 +357,7 @@ export default function CheckOut() {
               Check-Out Asset
             </h1>
 
-            <p className="text-sm text-muted-foreground">
-              Release equipment from the inventory.
-            </p>
+            
 
           </div>
 
@@ -393,9 +391,7 @@ export default function CheckOut() {
                 Select Asset
               </CardTitle>
 
-              <CardDescription>
-                Choose an available asset to check out.
-              </CardDescription>
+              
 
             </CardHeader>
 

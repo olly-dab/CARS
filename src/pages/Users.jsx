@@ -82,7 +82,7 @@ export default function Users() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Users & Roles</h1>
-            <p className="text-sm text-muted-foreground">Manage operator accounts and permissions.</p>
+            
           </div>
           <Button onClick={() => setShowForm((p) => !p)} className="gap-2">
             <PlusCircle className="h-4 w-4" />
@@ -164,7 +164,7 @@ export default function Users() {
               <UsersIcon className="h-4 w-4 text-primary" />
               <span>Operator Accounts</span>
             </CardTitle>
-            <CardDescription>{users.length} accounts registered</CardDescription>
+            
           </CardHeader>
           <CardContent className="p-0">
             <Table>

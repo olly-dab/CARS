@@ -382,9 +382,7 @@ export default function RegisterAsset() {
               Register Asset
             </h1>
 
-            <p className="text-sm text-muted-foreground">
-              Add new equipment to the CARS inventory.
-            </p>
+           
 
           </div>
 
@@ -418,9 +416,7 @@ export default function RegisterAsset() {
                 Asset Information
               </CardTitle>
 
-              <CardDescription>
-                Enter the asset and customer information.
-              </CardDescription>
+              
 
             </CardHeader>
 

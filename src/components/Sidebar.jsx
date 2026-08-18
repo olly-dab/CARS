@@ -62,9 +62,7 @@ export default function Sidebar() {
             CARS
           </h2>
 
-          <p className="text-xs text-slate-400">
-            Asset Management
-          </p>
+          
         </div>
 
       </div>

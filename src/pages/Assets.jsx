@@ -471,7 +471,7 @@ export default function Assets() {
       return "View all assets that are currently available.";
     }
 
-    return "View and manage all assets registered in the organisation.";
+    
   };
 
   // =====================================================
@@ -557,99 +557,7 @@ export default function Assets() {
             SUMMARY CARDS
         ================================================= */}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-
-          {/* =================================================
-              TOTAL ASSETS
-          ================================================= */}
-
-          <Card>
-
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Assets
-              </CardTitle>
-
-              <Laptop className="h-4 w-4 text-primary" />
-
-            </CardHeader>
-
-            <CardContent>
-
-              <div className="text-2xl font-bold">
-                {totalAssets}
-              </div>
-
-              <p className="mt-1 text-xs text-muted-foreground">
-                All registered assets
-              </p>
-
-            </CardContent>
-
-          </Card>
-
-          {/* =================================================
-              AVAILABLE
-          ================================================= */}
-
-          <Card>
-
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Available
-              </CardTitle>
-
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-
-            </CardHeader>
-
-            <CardContent>
-
-              <div className="text-2xl font-bold text-emerald-600">
-                {availableAssets}
-              </div>
-
-              <p className="mt-1 text-xs text-muted-foreground">
-                Ready to be checked out
-              </p>
-
-            </CardContent>
-
-          </Card>
-
-          {/* =================================================
-              CHECKED OUT
-          ================================================= */}
-
-          <Card>
-
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Checked Out
-              </CardTitle>
-
-              <ArrowUpRight className="h-4 w-4 text-amber-600" />
-
-            </CardHeader>
-
-            <CardContent>
-
-              <div className="text-2xl font-bold text-amber-600">
-                {checkedOutAssets}
-              </div>
-
-              <p className="mt-1 text-xs text-muted-foreground">
-                Currently with customers
-              </p>
-
-            </CardContent>
-
-          </Card>
-
-        </div>
+        
 
         {/* =================================================
             CURRENT ASSET REGISTRY
@@ -669,23 +577,7 @@ export default function Assets() {
                 Current Asset Registry
               </CardTitle>
 
-              <CardDescription>
-
-                Showing{" "}
-
-                <span className="font-medium text-foreground">
-                  {firstItem} - {lastItem}
-                </span>
-
-                {" "}of{" "}
-
-                <span className="font-medium text-foreground">
-                  {filteredAssets.length}
-                </span>
-
-                {" "}assets
-
-              </CardDescription>
+              
 
             </div>
 
@@ -1096,7 +988,7 @@ export default function Assets() {
 
               <p className="text-sm text-muted-foreground">
 
-                Showing{" "}
+              {" "}
 
                 <span className="font-medium text-foreground">
                   {firstItem}

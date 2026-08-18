@@ -409,9 +409,7 @@ export default function Reports() {
               Reports & Analytics
             </h1>
 
-            <p className="text-sm text-muted-foreground">
-              Comprehensive system audit breakdown.
-            </p>
+           
 
           </div>
 
@@ -507,30 +505,6 @@ export default function Reports() {
           </Card>
 
 
-          {/* MAINTENANCE */}
-
-          <Card>
-
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Maintenance
-              </CardTitle>
-
-              <Activity className="h-4 w-4 text-orange-600" />
-
-            </CardHeader>
-
-            <CardContent>
-
-              <div className="text-2xl font-bold text-orange-600">
-                {maintenanceAssets.length}
-              </div>
-
-            </CardContent>
-
-          </Card>
-
         </div>
 
 
@@ -567,9 +541,7 @@ export default function Reports() {
                 Total Check-Outs
               </p>
 
-              <p className="text-xs text-muted-foreground">
-                Hardware released
-              </p>
+              
 
             </div>
 
@@ -584,9 +556,7 @@ export default function Reports() {
                 Total Check-Ins
               </p>
 
-              <p className="text-xs text-muted-foreground">
-                Hardware returned
-              </p>
+              
 
             </div>
 
@@ -601,9 +571,7 @@ export default function Reports() {
                 Total Transactions
               </p>
 
-              <p className="text-xs text-muted-foreground">
-                Full activity count
-              </p>
+              
 
             </div>
 
