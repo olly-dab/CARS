@@ -1,6 +1,13 @@
 // src/pages/Assets.jsx
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -31,7 +38,6 @@ import {
   Laptop,
   CheckCircle2,
   ArrowUpRight,
-  Activity,
   Search,
   X,
   Boxes,
@@ -58,7 +64,6 @@ export default function Assets() {
   // =====================================================
 
   const [assets, setAssets] = useState([]);
-  const [history, setHistory] = useState([]);
 
   const [search, setSearch] = useState("");
 
@@ -72,21 +77,14 @@ export default function Assets() {
   const searchContainerRef = useRef(null);
 
   // =====================================================
-  // LOAD DATA
+  // LOAD ASSETS
   // =====================================================
 
-  const loadData = useCallback(() => {
+  const loadAssets = useCallback(() => {
     try {
       const savedAssets =
         JSON.parse(
           localStorage.getItem("cars_assets")
-        ) || [];
-
-      const savedHistory =
-        JSON.parse(
-          localStorage.getItem(
-            "cars_asset_history"
-          )
         ) || [];
 
       setAssets(
@@ -94,36 +92,29 @@ export default function Assets() {
           ? savedAssets
           : []
       );
-
-      setHistory(
-        Array.isArray(savedHistory)
-          ? savedHistory
-          : []
-      );
     } catch (error) {
       console.error(
-        "Unable to load asset data:",
+        "Unable to load assets:",
         error
       );
 
       setAssets([]);
-      setHistory([]);
     }
   }, []);
 
   // =====================================================
-  // LOAD WHEN PAGE OPENS
+  // LOAD DATA WHEN PAGE OPENS
   // =====================================================
 
   useEffect(() => {
-    loadData();
+    loadAssets();
 
     const handleFocus = () => {
-      loadData();
+      loadAssets();
     };
 
     const handleStorageChange = () => {
-      loadData();
+      loadAssets();
     };
 
     window.addEventListener(
@@ -147,7 +138,7 @@ export default function Assets() {
         handleStorageChange
       );
     };
-  }, [loadData]);
+  }, [loadAssets]);
 
   // =====================================================
   // CLOSE SEARCH SUGGESTIONS
@@ -179,7 +170,7 @@ export default function Assets() {
   }, []);
 
   // =====================================================
-  // RESET PAGE WHEN SEARCH CHANGES
+  // RESET PAGE WHEN SEARCH / FILTER CHANGES
   // =====================================================
 
   useEffect(() => {
@@ -204,24 +195,7 @@ export default function Assets() {
   ).length;
 
   // =====================================================
-  // MOVEMENT METRICS
-  // =====================================================
-
-  const totalCheckouts = history.filter(
-    (item) =>
-      item.action === "Check-Out"
-  ).length;
-
-  const totalCheckins = history.filter(
-    (item) =>
-      item.action === "Check-In"
-  ).length;
-
-  const totalTransactions =
-    history.length;
-
-  // =====================================================
-  // FILTER + SEARCH
+  // FILTER + SEARCH ASSETS
   // =====================================================
 
   const filteredAssets = useMemo(() => {
@@ -246,7 +220,7 @@ export default function Assets() {
       })
       .filter((asset) => {
         // -----------------------------------------------
-        // SEARCH
+        // SEARCH FILTER
         // -----------------------------------------------
 
         if (!searchValue) {
@@ -307,6 +281,7 @@ export default function Assets() {
 
     return assets
       .filter((asset) => {
+        // Apply status filter to suggestions too
         if (
           statusFilter &&
           (asset.status || "Available") !==
@@ -505,6 +480,7 @@ export default function Assets() {
 
   return (
     <DashboardLayout>
+
       <div className="space-y-6">
 
         {/* =================================================
@@ -514,6 +490,7 @@ export default function Assets() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
           <div>
+
             <div className="flex items-center gap-3">
 
               <h1 className="text-3xl font-bold tracking-tight">
@@ -535,9 +512,12 @@ export default function Assets() {
             <p className="mt-1 text-sm text-muted-foreground">
               {getPageDescription()}
             </p>
+
           </div>
 
-          {/* RIGHT SIDE */}
+          {/* =================================================
+              HEADER BUTTONS
+          ================================================= */}
 
           <div className="flex items-center gap-2">
 
@@ -553,8 +533,6 @@ export default function Assets() {
                 All Assets
               </Button>
             )}
-
-            {/* RECEPTION ONLY */}
 
             {currentUser?.role ===
               "Reception" && (
@@ -572,6 +550,7 @@ export default function Assets() {
             )}
 
           </div>
+
         </div>
 
         {/* =================================================
@@ -580,9 +559,12 @@ export default function Assets() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
-          {/* TOTAL */}
+          {/* =================================================
+              TOTAL ASSETS
+          ================================================= */}
 
           <Card>
+
             <CardHeader className="flex flex-row items-center justify-between pb-2">
 
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -594,6 +576,7 @@ export default function Assets() {
             </CardHeader>
 
             <CardContent>
+
               <div className="text-2xl font-bold">
                 {totalAssets}
               </div>
@@ -601,12 +584,17 @@ export default function Assets() {
               <p className="mt-1 text-xs text-muted-foreground">
                 All registered assets
               </p>
+
             </CardContent>
+
           </Card>
 
-          {/* AVAILABLE */}
+          {/* =================================================
+              AVAILABLE
+          ================================================= */}
 
           <Card>
+
             <CardHeader className="flex flex-row items-center justify-between pb-2">
 
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -618,6 +606,7 @@ export default function Assets() {
             </CardHeader>
 
             <CardContent>
+
               <div className="text-2xl font-bold text-emerald-600">
                 {availableAssets}
               </div>
@@ -625,12 +614,17 @@ export default function Assets() {
               <p className="mt-1 text-xs text-muted-foreground">
                 Ready to be checked out
               </p>
+
             </CardContent>
+
           </Card>
 
-          {/* CHECKED OUT */}
+          {/* =================================================
+              CHECKED OUT
+          ================================================= */}
 
           <Card>
+
             <CardHeader className="flex flex-row items-center justify-between pb-2">
 
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -642,6 +636,7 @@ export default function Assets() {
             </CardHeader>
 
             <CardContent>
+
               <div className="text-2xl font-bold text-amber-600">
                 {checkedOutAssets}
               </div>
@@ -649,84 +644,12 @@ export default function Assets() {
               <p className="mt-1 text-xs text-muted-foreground">
                 Currently with customers
               </p>
+
             </CardContent>
+
           </Card>
 
         </div>
-
-        {/* =================================================
-            ASSET MOVEMENT METRICS
-        ================================================= */}
-
-        <Card>
-
-          <CardHeader>
-
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Activity className="h-4 w-4 text-primary" />
-              Asset Movement Metrics
-            </CardTitle>
-
-          </CardHeader>
-
-          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-
-            {/* CHECK OUT */}
-
-            <div className="rounded-lg border bg-muted/20 p-4">
-
-              <span className="text-3xl font-bold text-amber-600">
-                {totalCheckouts}
-              </span>
-
-              <p className="mt-1 text-sm font-semibold">
-                Total Check-Outs
-              </p>
-
-              <p className="text-xs text-muted-foreground">
-                Hardware released
-              </p>
-
-            </div>
-
-            {/* CHECK IN */}
-
-            <div className="rounded-lg border bg-muted/20 p-4">
-
-              <span className="text-3xl font-bold text-emerald-600">
-                {totalCheckins}
-              </span>
-
-              <p className="mt-1 text-sm font-semibold">
-                Total Check-Ins
-              </p>
-
-              <p className="text-xs text-muted-foreground">
-                Hardware returned
-              </p>
-
-            </div>
-
-            {/* TRANSACTIONS */}
-
-            <div className="rounded-lg border bg-muted/20 p-4">
-
-              <span className="text-3xl font-bold text-primary">
-                {totalTransactions}
-              </span>
-
-              <p className="mt-1 text-sm font-semibold">
-                Transactions
-              </p>
-
-              <p className="text-xs text-muted-foreground">
-                Full activity count
-              </p>
-
-            </div>
-
-          </CardContent>
-        </Card>
 
         {/* =================================================
             CURRENT ASSET REGISTRY
@@ -736,29 +659,39 @@ export default function Assets() {
 
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-            {/* TITLE */}
+            {/* =================================================
+                TITLE
+            ================================================= */}
 
             <div>
 
               <CardTitle className="text-base">
-                Current Asset Registry Status
+                Current Asset Registry
               </CardTitle>
 
               <CardDescription>
+
                 Showing{" "}
+
                 <span className="font-medium text-foreground">
                   {firstItem} - {lastItem}
-                </span>{" "}
-                of{" "}
+                </span>
+
+                {" "}of{" "}
+
                 <span className="font-medium text-foreground">
                   {filteredAssets.length}
-                </span>{" "}
-                assets
+                </span>
+
+                {" "}assets
+
               </CardDescription>
 
             </div>
 
-            {/* SEARCH */}
+            {/* =================================================
+                SEARCH
+            ================================================= */}
 
             <div
               ref={searchContainerRef}
@@ -800,6 +733,8 @@ export default function Assets() {
                 className="pl-9 pr-9"
               />
 
+              {/* CLEAR SEARCH */}
+
               {search && (
                 <button
                   type="button"
@@ -818,7 +753,9 @@ export default function Assets() {
                 </button>
               )}
 
-              {/* SEARCH SUGGESTIONS */}
+              {/* =================================================
+                  SEARCH SUGGESTIONS
+              ================================================= */}
 
               {showSuggestions &&
                 search.trim() &&
@@ -917,10 +854,13 @@ export default function Assets() {
                     )}
 
                   </div>
+
                 </div>
+
               )}
 
             </div>
+
           </CardHeader>
 
           {/* =================================================
@@ -987,30 +927,38 @@ export default function Assets() {
                           {/* ASSET ID */}
 
                           <TableCell className="font-mono font-bold text-primary">
+
                             {asset.assetId ||
                               "-"}
+
                           </TableCell>
 
                           {/* TYPE */}
 
                           <TableCell className="font-medium">
+
                             {asset.assetType ||
                               asset.assetName ||
                               "Equipment"}
+
                           </TableCell>
 
                           {/* BRAND */}
 
                           <TableCell>
+
                             {asset.brand ||
                               "-"}
+
                           </TableCell>
 
                           {/* SERIAL */}
 
                           <TableCell className="font-mono text-xs text-muted-foreground">
+
                             {asset.serialNumber ||
                               "-"}
+
                           </TableCell>
 
                           {/* CUSTOMER */}
@@ -1022,16 +970,20 @@ export default function Assets() {
                               <div>
 
                                 <div className="font-medium">
+
                                   {
                                     asset.customerName
                                   }
+
                                 </div>
 
                                 {asset.customerId && (
                                   <div className="text-xs text-muted-foreground">
+
                                     {
                                       asset.customerId
                                     }
+
                                   </div>
                                 )}
 
@@ -1056,8 +1008,10 @@ export default function Assets() {
                                 asset.status
                               )}
                             >
+
                               {asset.status ||
                                 "Available"}
+
                             </Badge>
 
                           </TableCell>
@@ -1076,8 +1030,11 @@ export default function Assets() {
                               }
                               className="gap-1.5"
                             >
+
                               <Eye className="h-4 w-4" />
+
                               View
+
                             </Button>
 
                           </TableCell>
@@ -1140,18 +1097,24 @@ export default function Assets() {
               <p className="text-sm text-muted-foreground">
 
                 Showing{" "}
+
                 <span className="font-medium text-foreground">
                   {firstItem}
-                </span>{" "}
-                -{" "}
+                </span>
+
+                {" "}-
+
                 <span className="font-medium text-foreground">
                   {lastItem}
-                </span>{" "}
-                of{" "}
+                </span>
+
+                {" "}of{" "}
+
                 <span className="font-medium text-foreground">
                   {filteredAssets.length}
-                </span>{" "}
-                assets
+                </span>
+
+                {" "}assets
 
               </p>
 
@@ -1178,10 +1141,13 @@ export default function Assets() {
                   }
                   className="gap-1"
                 >
+
                   <ChevronLeft className="h-4 w-4" />
+
                   <span className="hidden sm:inline">
                     Previous
                   </span>
+
                 </Button>
 
                 {/* PAGE NUMBERS */}
@@ -1195,11 +1161,6 @@ export default function Assets() {
                     (_, index) =>
                       index + 1
                   ).map((page) => {
-
-                    /*
-                     * If there are many pages,
-                     * keep the pagination compact.
-                     */
 
                     if (
                       totalPages > 7 &&
@@ -1233,6 +1194,7 @@ export default function Assets() {
                         {page}
                       </Button>
                     );
+
                   })}
 
                 </div>
@@ -1257,20 +1219,25 @@ export default function Assets() {
                   }
                   className="gap-1"
                 >
+
                   <span className="hidden sm:inline">
                     Next
                   </span>
+
                   <ChevronRight className="h-4 w-4" />
+
                 </Button>
 
               </div>
 
             </div>
+
           )}
 
         </Card>
 
       </div>
+
     </DashboardLayout>
   );
 }
