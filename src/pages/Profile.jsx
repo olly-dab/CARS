@@ -1,3 +1,5 @@
+// src/pages/Profile.jsx
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -26,11 +28,16 @@ import {
   ArrowLeft,
   Lock,
   ShieldCheck,
+  AtSign,
 } from "lucide-react";
 
 export default function Profile() {
-  const { currentUser, login } = useAuth();
+  const { currentUser, updateCurrentUser } = useAuth();
   const navigate = useNavigate();
+
+  // ==========================================
+  // FORM
+  // ==========================================
 
   const [form, setForm] = useState({
     name: "",
@@ -40,9 +47,9 @@ export default function Profile() {
 
   const [errors, setErrors] = useState({});
 
-  // ======================================================
+  // ==========================================
   // LOAD CURRENT USER
-  // ======================================================
+  // ==========================================
 
   useEffect(() => {
     if (!currentUser) {
@@ -57,29 +64,29 @@ export default function Profile() {
     });
   }, [currentUser, navigate]);
 
-  // ======================================================
+  // ==========================================
   // HANDLE CHANGE
-  // ======================================================
+  // ==========================================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setForm((prev) => ({
-      ...prev,
+    setForm((previous) => ({
+      ...previous,
       [name]: value,
     }));
 
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
+      setErrors((previous) => ({
+        ...previous,
         [name]: "",
       }));
     }
   };
 
-  // ======================================================
+  // ==========================================
   // VALIDATION
-  // ======================================================
+  // ==========================================
 
   const validate = () => {
     const newErrors = {};
@@ -94,9 +101,7 @@ export default function Profile() {
 
     if (!form.password.trim()) {
       newErrors.password = "Password is required.";
-    }
-
-    if (form.password.length < 4) {
+    } else if (form.password.length < 4) {
       newErrors.password =
         "Password must be at least 4 characters.";
     }
@@ -104,9 +109,9 @@ export default function Profile() {
     return newErrors;
   };
 
-  // ======================================================
+  // ==========================================
   // SAVE PROFILE
-  // ======================================================
+  // ==========================================
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -118,79 +123,104 @@ export default function Profile() {
       return;
     }
 
-    // ---------------------------------------------
-    // GET ALL USERS
-    // ---------------------------------------------
+    try {
+      // ----------------------------------------
+      // GET USERS
+      // ----------------------------------------
 
-    const users =
-      JSON.parse(
-        localStorage.getItem("cars_users")
-      ) || [];
+      const users =
+        JSON.parse(
+          localStorage.getItem("cars_users")
+        ) || [];
 
-    // ---------------------------------------------
-    // CHECK USERNAME
-    // ---------------------------------------------
+      // ----------------------------------------
+      // CHECK USERNAME
+      // ----------------------------------------
 
-    const usernameExists = users.some(
-      (user) =>
-        user.username.toLowerCase() ===
-          form.username.trim().toLowerCase() &&
-        String(user.id) !== String(currentUser.id)
-    );
+      const usernameExists = users.some(
+        (user) =>
+          user.username?.toLowerCase() ===
+            form.username.trim().toLowerCase() &&
+          String(user.id) !==
+            String(currentUser.id)
+      );
 
-    if (usernameExists) {
-      setErrors({
-        username: "This username is already in use.",
-      });
-      return;
+      if (usernameExists) {
+        setErrors({
+          username:
+            "This username is already in use.",
+        });
+
+        return;
+      }
+
+      // ----------------------------------------
+      // UPDATED USER
+      // ----------------------------------------
+
+      const updatedUser = {
+        ...currentUser,
+
+        name: form.name.trim(),
+
+        username:
+          form.username.trim(),
+
+        password:
+          form.password,
+
+        // IMPORTANT:
+        // Keep existing role unchanged.
+        role: currentUser.role,
+      };
+
+      // ----------------------------------------
+      // UPDATE USERS
+      // ----------------------------------------
+
+      const updatedUsers = users.map(
+        (user) =>
+          String(user.id) ===
+          String(currentUser.id)
+            ? updatedUser
+            : user
+      );
+
+      localStorage.setItem(
+        "cars_users",
+        JSON.stringify(updatedUsers)
+      );
+
+      // ----------------------------------------
+      // UPDATE CURRENT USER
+      // ----------------------------------------
+
+      updateCurrentUser(updatedUser);
+
+      // ----------------------------------------
+      // SUCCESS
+      // ----------------------------------------
+
+      setErrors({});
+
+      toast.success(
+        "Your profile has been updated successfully."
+      );
+    } catch (error) {
+      console.error(
+        "Profile update error:",
+        error
+      );
+
+      toast.error(
+        "Unable to update your profile."
+      );
     }
-
-    // ---------------------------------------------
-    // UPDATED USER
-    // ---------------------------------------------
-
-    const updatedUser = {
-      ...currentUser,
-      name: form.name.trim(),
-      username: form.username.trim(),
-      password: form.password,
-    };
-
-    // ---------------------------------------------
-    // UPDATE USERS LIST
-    // ---------------------------------------------
-
-    const updatedUsers = users.map((user) =>
-      String(user.id) === String(currentUser.id)
-        ? updatedUser
-        : user
-    );
-
-    localStorage.setItem(
-      "cars_users",
-      JSON.stringify(updatedUsers)
-    );
-
-    // ---------------------------------------------
-    // UPDATE CURRENT USER
-    // ---------------------------------------------
-
-    login(updatedUser);
-
-    // ---------------------------------------------
-    // SUCCESS
-    // ---------------------------------------------
-
-    toast.success(
-      "Your profile has been updated successfully."
-    );
-
-    setErrors({});
   };
 
-  // ======================================================
+  // ==========================================
   // INITIALS
-  // ======================================================
+  // ==========================================
 
   const initials = form.name
     ? form.name
@@ -202,23 +232,26 @@ export default function Profile() {
         .slice(0, 2)
     : "U";
 
-  // ======================================================
+  // ==========================================
   // NO USER
-  // ======================================================
+  // ==========================================
 
   if (!currentUser) {
     return null;
   }
 
-  // ======================================================
+  // ==========================================
   // UI
-  // ======================================================
+  // ==========================================
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
 
-        {/* HEADER */}
+      <div className="mx-auto max-w-2xl space-y-6">
+
+        {/* ======================================
+            HEADER
+        ======================================= */}
 
         <div className="flex items-center justify-between">
 
@@ -234,7 +267,9 @@ export default function Profile() {
 
           <Button
             variant="ghost"
-            onClick={() => navigate("/dashboard")}
+            onClick={() =>
+              navigate("/dashboard")
+            }
             className="gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -243,7 +278,10 @@ export default function Profile() {
 
         </div>
 
-        {/* PROFILE CARD */}
+
+        {/* ======================================
+            PROFILE CARD
+        ======================================= */}
 
         <Card>
 
@@ -253,9 +291,11 @@ export default function Profile() {
 
               {/* AVATAR */}
 
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-bold shadow-sm">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground shadow-sm">
                 {initials}
               </div>
+
+              {/* USER INFO */}
 
               <div>
 
@@ -268,6 +308,8 @@ export default function Profile() {
                 </CardDescription>
 
               </div>
+
+              {/* ROLE */}
 
               <Badge
                 className="ml-auto"
@@ -284,7 +326,10 @@ export default function Profile() {
 
           </CardHeader>
 
-          {/* FORM */}
+
+          {/* ====================================
+              FORM
+          ===================================== */}
 
           <form onSubmit={handleSubmit}>
 
@@ -321,6 +366,7 @@ export default function Profile() {
 
               </div>
 
+
               {/* USERNAME */}
 
               <div className="space-y-2">
@@ -329,13 +375,20 @@ export default function Profile() {
                   Username
                 </Label>
 
-                <Input
-                  id="username"
-                  name="username"
-                  value={form.username}
-                  onChange={handleChange}
-                  placeholder="Enter your username"
-                />
+                <div className="relative">
+
+                  <AtSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+
+                  <Input
+                    id="username"
+                    name="username"
+                    value={form.username}
+                    onChange={handleChange}
+                    placeholder="Enter your username"
+                    className="pl-9"
+                  />
+
+                </div>
 
                 {errors.username && (
                   <p className="text-xs text-destructive">
@@ -344,6 +397,7 @@ export default function Profile() {
                 )}
 
               </div>
+
 
               {/* PASSWORD */}
 
@@ -377,6 +431,7 @@ export default function Profile() {
 
               </div>
 
+
               {/* ROLE */}
 
               <div className="rounded-lg border bg-muted/30 p-4">
@@ -407,14 +462,19 @@ export default function Profile() {
 
             </CardContent>
 
-            {/* FOOTER */}
+
+            {/* ==================================
+                FOOTER
+            =================================== */}
 
             <CardFooter className="flex justify-end gap-3 border-t p-4">
 
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate("/dashboard")}
+                onClick={() =>
+                  navigate("/dashboard")
+                }
               >
                 Cancel
               </Button>
@@ -434,6 +494,7 @@ export default function Profile() {
         </Card>
 
       </div>
+
     </DashboardLayout>
   );
 }
