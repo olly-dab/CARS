@@ -68,6 +68,21 @@ function App() {
               />
             }
           />
+          {/* =========================
+    CHECKOUT
+    ADMIN + RECEPTION
+========================= */}
+
+<Route
+  path="/checkout"
+  element={
+    <RoleProtectedRoute
+      allowedRoles={["Admin", "Reception"]}
+    >
+      <CheckOut />
+    </RoleProtectedRoute>
+  }
+/>
 
 
           {/* ==================================================
