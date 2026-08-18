@@ -1,10 +1,7 @@
 // src/pages/Assets.jsx
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  useNavigate,
-  useSearchParams,
-} from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
@@ -31,50 +28,65 @@ import {
 } from "@/components/ui/table";
 
 import {
-  Plus,
-  Search,
-  Boxes,
-  X,
   Laptop,
+  CheckCircle2,
+  ArrowUpRight,
+  Activity,
+  Search,
+  X,
+  Boxes,
   Eye,
-  Filter,
-  Pencil,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 export default function Assets() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   // =====================================================
   // URL STATUS FILTER
   // =====================================================
 
-  const [searchParams, setSearchParams] =
-    useSearchParams();
-
-  const statusFilter =
-    searchParams.get("status");
+  const statusFilter = searchParams.get("status");
 
   // =====================================================
   // STATE
   // =====================================================
 
   const [assets, setAssets] = useState([]);
+  const [history, setHistory] = useState([]);
+
   const [search, setSearch] = useState("");
+
   const [showSuggestions, setShowSuggestions] =
     useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 10;
 
   const searchContainerRef = useRef(null);
 
   // =====================================================
-  // LOAD ASSETS
+  // LOAD DATA
   // =====================================================
 
-  const loadAssets = useCallback(() => {
+  const loadData = useCallback(() => {
     try {
       const savedAssets =
         JSON.parse(
           localStorage.getItem("cars_assets")
+        ) || [];
+
+      const savedHistory =
+        JSON.parse(
+          localStorage.getItem(
+            "cars_asset_history"
+          )
         ) || [];
 
       setAssets(
@@ -82,13 +94,20 @@ export default function Assets() {
           ? savedAssets
           : []
       );
+
+      setHistory(
+        Array.isArray(savedHistory)
+          ? savedHistory
+          : []
+      );
     } catch (error) {
       console.error(
-        "Unable to load assets:",
+        "Unable to load asset data:",
         error
       );
 
       setAssets([]);
+      setHistory([]);
     }
   }, []);
 
@@ -97,14 +116,14 @@ export default function Assets() {
   // =====================================================
 
   useEffect(() => {
-    loadAssets();
+    loadData();
 
     const handleFocus = () => {
-      loadAssets();
+      loadData();
     };
 
-    const handleStorage = () => {
-      loadAssets();
+    const handleStorageChange = () => {
+      loadData();
     };
 
     window.addEventListener(
@@ -114,7 +133,7 @@ export default function Assets() {
 
     window.addEventListener(
       "storage",
-      handleStorage
+      handleStorageChange
     );
 
     return () => {
@@ -125,10 +144,10 @@ export default function Assets() {
 
       window.removeEventListener(
         "storage",
-        handleStorage
+        handleStorageChange
       );
     };
-  }, [loadAssets]);
+  }, [loadData]);
 
   // =====================================================
   // CLOSE SEARCH SUGGESTIONS
@@ -160,117 +179,224 @@ export default function Assets() {
   }, []);
 
   // =====================================================
-  // STATUS FILTER
+  // RESET PAGE WHEN SEARCH CHANGES
   // =====================================================
 
-  const statusFilteredAssets = assets.filter(
-    (asset) => {
-      if (!statusFilter) {
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
+
+  // =====================================================
+  // ASSET COUNTS
+  // =====================================================
+
+  const totalAssets = assets.length;
+
+  const availableAssets = assets.filter(
+    (asset) =>
+      (asset.status || "Available") ===
+      "Available"
+  ).length;
+
+  const checkedOutAssets = assets.filter(
+    (asset) =>
+      asset.status === "Checked Out"
+  ).length;
+
+  // =====================================================
+  // MOVEMENT METRICS
+  // =====================================================
+
+  const totalCheckouts = history.filter(
+    (item) =>
+      item.action === "Check-Out"
+  ).length;
+
+  const totalCheckins = history.filter(
+    (item) =>
+      item.action === "Check-In"
+  ).length;
+
+  const totalTransactions =
+    history.length;
+
+  // =====================================================
+  // FILTER + SEARCH
+  // =====================================================
+
+  const filteredAssets = useMemo(() => {
+    const searchValue =
+      search.toLowerCase().trim();
+
+    return assets
+      .filter((asset) => {
+        // -----------------------------------------------
+        // STATUS FILTER
+        // -----------------------------------------------
+
+        if (
+          statusFilter &&
+          (asset.status || "Available") !==
+            statusFilter
+        ) {
+          return false;
+        }
+
         return true;
-      }
+      })
+      .filter((asset) => {
+        // -----------------------------------------------
+        // SEARCH
+        // -----------------------------------------------
 
-      return asset.status === statusFilter;
-    }
-  );
+        if (!searchValue) {
+          return true;
+        }
 
-  // =====================================================
-  // SEARCH
-  // =====================================================
-
-  const searchValue =
-    search.toLowerCase().trim();
-
-  const filteredAssets = assets
-    .filter((asset) => {
-      // Status filter
-      if (
-        statusFilter &&
-        asset.status !== statusFilter
-      ) {
-        return false;
-      }
-
-      return true;
-    })
-    .filter((asset) => {
-      // Search filter
-      if (!searchValue) {
-        return true;
-      }
-
-      return (
-        asset.assetId
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        asset.assetType
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        asset.brand
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        asset.serialNumber
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        asset.status
-          ?.toLowerCase()
-          .includes(searchValue)
+        return (
+          asset.assetId
+            ?.toLowerCase()
+            .includes(searchValue) ||
+          asset.assetName
+            ?.toLowerCase()
+            .includes(searchValue) ||
+          asset.assetType
+            ?.toLowerCase()
+            .includes(searchValue) ||
+          asset.brand
+            ?.toLowerCase()
+            .includes(searchValue) ||
+          asset.serialNumber
+            ?.toLowerCase()
+            .includes(searchValue) ||
+          asset.customerName
+            ?.toLowerCase()
+            .includes(searchValue) ||
+          asset.status
+            ?.toLowerCase()
+            .includes(searchValue)
+        );
+      })
+      .slice()
+      .sort(
+        (a, b) =>
+          new Date(
+            b.registeredDate || 0
+          ) -
+          new Date(
+            a.registeredDate || 0
+          )
       );
-    });
-
-  // =====================================================
-  // SORT LATEST ASSET FIRST
-  // =====================================================
-
-  const sortedAssets = filteredAssets
-    .slice()
-    .sort(
-      (a, b) =>
-        new Date(
-          b.registeredDate || 0
-        ) -
-        new Date(
-          a.registeredDate || 0
-        )
-    );
+  }, [
+    assets,
+    search,
+    statusFilter,
+  ]);
 
   // =====================================================
   // SEARCH SUGGESTIONS
   // =====================================================
 
-  const suggestions = statusFilteredAssets
-    .filter((asset) => {
-      if (!searchValue) {
-        return false;
-      }
+  const suggestions = useMemo(() => {
+    const searchValue =
+      search.toLowerCase().trim();
 
-      return (
-        asset.assetId
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        asset.brand
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        asset.assetType
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        asset.serialNumber
-          ?.toLowerCase()
-          .includes(searchValue)
-      );
-    })
-    .slice(0, 6);
+    if (!searchValue) {
+      return [];
+    }
+
+    return assets
+      .filter((asset) => {
+        if (
+          statusFilter &&
+          (asset.status || "Available") !==
+            statusFilter
+        ) {
+          return false;
+        }
+
+        return (
+          asset.assetId
+            ?.toLowerCase()
+            .includes(searchValue) ||
+          asset.assetName
+            ?.toLowerCase()
+            .includes(searchValue) ||
+          asset.assetType
+            ?.toLowerCase()
+            .includes(searchValue) ||
+          asset.brand
+            ?.toLowerCase()
+            .includes(searchValue) ||
+          asset.serialNumber
+            ?.toLowerCase()
+            .includes(searchValue) ||
+          asset.customerName
+            ?.toLowerCase()
+            .includes(searchValue)
+        );
+      })
+      .slice(0, 6);
+  }, [
+    assets,
+    search,
+    statusFilter,
+  ]);
+
+  // =====================================================
+  // PAGINATION
+  // =====================================================
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(
+      filteredAssets.length /
+        itemsPerPage
+    )
+  );
+
+  const safeCurrentPage = Math.min(
+    currentPage,
+    totalPages
+  );
+
+  const startIndex =
+    (safeCurrentPage - 1) *
+    itemsPerPage;
+
+  const endIndex =
+    startIndex + itemsPerPage;
+
+  const paginatedAssets =
+    filteredAssets.slice(
+      startIndex,
+      endIndex
+    );
+
+  // =====================================================
+  // PAGE DISPLAY
+  // =====================================================
+
+  const firstItem =
+    filteredAssets.length === 0
+      ? 0
+      : startIndex + 1;
+
+  const lastItem = Math.min(
+    endIndex,
+    filteredAssets.length
+  );
 
   // =====================================================
   // STATUS BADGE
   // =====================================================
 
-  const getStatusVariant = (status) => {
+  const getStatusVariant = (
+    status
+  ) => {
     switch (status) {
       case "Checked Out":
         return "warning";
-
-      case "Maintenance":
-        return "secondary";
 
       case "Available":
       default:
@@ -282,9 +408,16 @@ export default function Assets() {
   // SELECT SEARCH SUGGESTION
   // =====================================================
 
-  const handleSelectSuggestion = (asset) => {
-    setSearch(asset.assetId || "");
+  const handleSelectSuggestion = (
+    asset
+  ) => {
+    setSearch(
+      asset.assetId || ""
+    );
+
     setShowSuggestions(false);
+
+    setCurrentPage(1);
   };
 
   // =====================================================
@@ -294,6 +427,7 @@ export default function Assets() {
   const handleClearSearch = () => {
     setSearch("");
     setShowSuggestions(false);
+    setCurrentPage(1);
   };
 
   // =====================================================
@@ -303,27 +437,21 @@ export default function Assets() {
   const handleClearFilter = () => {
     setSearchParams({});
     setSearch("");
-    setShowSuggestions(false);
+    setCurrentPage(1);
   };
 
   // =====================================================
   // VIEW ASSET
   // =====================================================
 
-  const handleViewAsset = (asset) => {
+  const handleViewAsset = (
+    asset
+  ) => {
     navigate(
-      `/assets/${asset.id || asset.assetId}`
-    );
-  };
-
-  // =====================================================
-  // EDIT ASSET
-  // Reception Only
-  // =====================================================
-
-  const handleEditAsset = (asset) => {
-    navigate(
-      `/assets/${asset.id || asset.assetId}/edit`
+      `/assets/${
+        asset.id ||
+        asset.assetId
+      }`
     );
   };
 
@@ -332,11 +460,17 @@ export default function Assets() {
   // =====================================================
 
   const getPageTitle = () => {
-    if (statusFilter === "Checked Out") {
+    if (
+      statusFilter ===
+      "Checked Out"
+    ) {
       return "Checked Out Assets";
     }
 
-    if (statusFilter === "Available") {
+    if (
+      statusFilter ===
+      "Available"
+    ) {
       return "Available Assets";
     }
 
@@ -348,11 +482,17 @@ export default function Assets() {
   // =====================================================
 
   const getPageDescription = () => {
-    if (statusFilter === "Checked Out") {
+    if (
+      statusFilter ===
+      "Checked Out"
+    ) {
       return "View all assets that are currently checked out.";
     }
 
-    if (statusFilter === "Available") {
+    if (
+      statusFilter ===
+      "Available"
+    ) {
       return "View all assets that are currently available.";
     }
 
@@ -371,10 +511,9 @@ export default function Assets() {
             HEADER
         ================================================= */}
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
           <div>
-
             <div className="flex items-center gap-3">
 
               <h1 className="text-3xl font-bold tracking-tight">
@@ -393,24 +532,21 @@ export default function Assets() {
 
             </div>
 
-            <p className="text-sm text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               {getPageDescription()}
             </p>
-
           </div>
 
-          {/* =================================================
-              RIGHT SIDE BUTTONS
-          ================================================= */}
+          {/* RIGHT SIDE */}
 
           <div className="flex items-center gap-2">
-
-            {/* CLEAR FILTER */}
 
             {statusFilter && (
               <Button
                 variant="outline"
-                onClick={handleClearFilter}
+                onClick={
+                  handleClearFilter
+                }
                 className="gap-2"
               >
                 <X className="h-4 w-4" />
@@ -418,7 +554,7 @@ export default function Assets() {
               </Button>
             )}
 
-            {/* REGISTER ASSET - RECEPTION ONLY */}
+            {/* RECEPTION ONLY */}
 
             {currentUser?.role ===
               "Reception" && (
@@ -439,54 +575,190 @@ export default function Assets() {
         </div>
 
         {/* =================================================
-            REGISTRY CARD
+            SUMMARY CARDS
+        ================================================= */}
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+          {/* TOTAL */}
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Assets
+              </CardTitle>
+
+              <Laptop className="h-4 w-4 text-primary" />
+
+            </CardHeader>
+
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {totalAssets}
+              </div>
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                All registered assets
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* AVAILABLE */}
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Available
+              </CardTitle>
+
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+
+            </CardHeader>
+
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600">
+                {availableAssets}
+              </div>
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                Ready to be checked out
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* CHECKED OUT */}
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Checked Out
+              </CardTitle>
+
+              <ArrowUpRight className="h-4 w-4 text-amber-600" />
+
+            </CardHeader>
+
+            <CardContent>
+              <div className="text-2xl font-bold text-amber-600">
+                {checkedOutAssets}
+              </div>
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                Currently with customers
+              </p>
+            </CardContent>
+          </Card>
+
+        </div>
+
+        {/* =================================================
+            ASSET MOVEMENT METRICS
         ================================================= */}
 
         <Card>
 
-          <CardHeader
-            className="
-              flex flex-col gap-4
-              sm:flex-row
-              sm:items-center
-              sm:justify-between
-            "
-          >
+          <CardHeader>
 
-            {/* CARD TITLE */}
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Activity className="h-4 w-4 text-primary" />
+              Asset Movement Metrics
+            </CardTitle>
+
+          </CardHeader>
+
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+            {/* CHECK OUT */}
+
+            <div className="rounded-lg border bg-muted/20 p-4">
+
+              <span className="text-3xl font-bold text-amber-600">
+                {totalCheckouts}
+              </span>
+
+              <p className="mt-1 text-sm font-semibold">
+                Total Check-Outs
+              </p>
+
+              <p className="text-xs text-muted-foreground">
+                Hardware released
+              </p>
+
+            </div>
+
+            {/* CHECK IN */}
+
+            <div className="rounded-lg border bg-muted/20 p-4">
+
+              <span className="text-3xl font-bold text-emerald-600">
+                {totalCheckins}
+              </span>
+
+              <p className="mt-1 text-sm font-semibold">
+                Total Check-Ins
+              </p>
+
+              <p className="text-xs text-muted-foreground">
+                Hardware returned
+              </p>
+
+            </div>
+
+            {/* TRANSACTIONS */}
+
+            <div className="rounded-lg border bg-muted/20 p-4">
+
+              <span className="text-3xl font-bold text-primary">
+                {totalTransactions}
+              </span>
+
+              <p className="mt-1 text-sm font-semibold">
+                Transactions
+              </p>
+
+              <p className="text-xs text-muted-foreground">
+                Full activity count
+              </p>
+
+            </div>
+
+          </CardContent>
+        </Card>
+
+        {/* =================================================
+            CURRENT ASSET REGISTRY
+        ================================================= */}
+
+        <Card>
+
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+            {/* TITLE */}
 
             <div>
 
-              <div className="flex items-center gap-2">
-
-                <CardTitle className="text-base">
-                  Organisation Asset Registry
-                </CardTitle>
-
-                {statusFilter && (
-                  <Filter className="h-4 w-4 text-primary" />
-                )}
-
-              </div>
+              <CardTitle className="text-base">
+                Current Asset Registry Status
+              </CardTitle>
 
               <CardDescription>
-
-                {sortedAssets.length}{" "}
-                {sortedAssets.length === 1
-                  ? "asset"
-                  : "assets"}{" "}
-
-                {statusFilter
-                  ? `with status "${statusFilter}"`
-                  : "registered in the organisation."}
-
+                Showing{" "}
+                <span className="font-medium text-foreground">
+                  {firstItem} - {lastItem}
+                </span>{" "}
+                of{" "}
+                <span className="font-medium text-foreground">
+                  {filteredAssets.length}
+                </span>{" "}
+                assets
               </CardDescription>
 
             </div>
 
-            {/* =================================================
-                SEARCH
-            ================================================= */}
+            {/* SEARCH */}
 
             <div
               ref={searchContainerRef}
@@ -495,15 +767,17 @@ export default function Assets() {
 
               <Search
                 className="
-                  absolute left-3
+                  absolute
+                  left-3
                   top-2.5
-                  h-4 w-4
+                  h-4
+                  w-4
                   text-muted-foreground
                 "
               />
 
               <Input
-                placeholder="Search ID, brand, type, serial..."
+                placeholder="Search assets..."
                 value={search}
                 onChange={(e) => {
                   setSearch(
@@ -515,7 +789,9 @@ export default function Assets() {
                   );
                 }}
                 onFocus={() => {
-                  if (search.trim()) {
+                  if (
+                    search.trim()
+                  ) {
                     setShowSuggestions(
                       true
                     );
@@ -524,8 +800,6 @@ export default function Assets() {
                 className="pl-9 pr-9"
               />
 
-              {/* CLEAR SEARCH */}
-
               {search && (
                 <button
                   type="button"
@@ -533,7 +807,8 @@ export default function Assets() {
                     handleClearSearch
                   }
                   className="
-                    absolute right-2.5
+                    absolute
+                    right-2.5
                     top-2.5
                     text-muted-foreground
                     hover:text-foreground
@@ -543,123 +818,107 @@ export default function Assets() {
                 </button>
               )}
 
-              {/* =================================================
-                  SEARCH SUGGESTIONS
-              ================================================= */}
+              {/* SEARCH SUGGESTIONS */}
 
               {showSuggestions &&
                 search.trim() &&
-                suggestions.length > 0 && (
+                suggestions.length >
+                  0 && (
+
+                <div
+                  className="
+                    absolute
+                    left-0
+                    right-0
+                    top-full
+                    z-50
+                    mt-1
+                    overflow-hidden
+                    rounded-lg
+                    border
+                    bg-card
+                    shadow-lg
+                  "
+                >
+
                   <div
                     className="
-                      absolute
-                      left-0 right-0
-                      top-full
-                      mt-1
-                      z-50
-                      rounded-lg
-                      border
-                      bg-card
-                      shadow-lg
-                      overflow-hidden
+                      border-b
+                      bg-muted/30
+                      p-2
+                      text-[11px]
+                      font-semibold
+                      uppercase
+                      tracking-wider
+                      text-muted-foreground
                     "
                   >
+                    Matching Assets
+                  </div>
 
-                    <div
-                      className="
-                        p-2
-                        text-[11px]
-                        font-semibold
-                        uppercase
-                        tracking-wider
-                        text-muted-foreground
-                        bg-muted/30
-                        border-b
-                      "
-                    >
-                      Matching Assets
-                    </div>
+                  <div className="max-h-64 overflow-y-auto">
 
-                    <div
-                      className="
-                        divide-y
-                        divide-border/40
-                        max-h-64
-                        overflow-y-auto
-                      "
-                    >
+                    {suggestions.map(
+                      (asset) => (
 
-                      {suggestions.map(
-                        (asset) => (
-                          <button
-                            key={
-                              asset.id ||
-                              asset.assetId
-                            }
-                            type="button"
-                            onClick={() =>
-                              handleSelectSuggestion(
-                                asset
-                              )
-                            }
-                            className="
-                              w-full
-                              flex
-                              items-center
-                              justify-between
-                              px-3
-                              py-2.5
-                              text-left
-                              text-xs
-                              hover:bg-muted/60
-                              transition-colors
-                            "
-                          >
+                        <button
+                          key={
+                            asset.id ||
+                            asset.assetId
+                          }
+                          type="button"
+                          onClick={() =>
+                            handleSelectSuggestion(
+                              asset
+                            )
+                          }
+                          className="
+                            flex
+                            w-full
+                            items-center
+                            justify-between
+                            border-b
+                            px-3
+                            py-2.5
+                            text-left
+                            text-xs
+                            transition-colors
+                            hover:bg-muted/60
+                          "
+                        >
 
-                            <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
 
-                              <Laptop
-                                className="
-                                  h-4 w-4
-                                  text-primary
-                                  shrink-0
-                                "
-                              />
+                            <Laptop className="h-4 w-4 shrink-0 text-primary" />
 
-                              <div>
+                            <div>
 
-                                <div className="font-semibold text-foreground">
-                                  {asset.brand ||
-                                    "Unknown Brand"}
-                                </div>
+                              <div className="font-semibold">
+                                {asset.brand ||
+                                  "Unknown Brand"}
+                              </div>
 
-                                <div className="text-muted-foreground">
-                                  {asset.assetType ||
-                                    "Equipment"}
-                                </div>
-
+                              <div className="text-muted-foreground">
+                                {asset.assetType ||
+                                  "Equipment"}
                               </div>
 
                             </div>
 
-                            <span
-                              className="
-                                font-mono
-                                text-[11px]
-                                font-bold
-                                text-primary
-                              "
-                            >
-                              {asset.assetId}
-                            </span>
+                          </div>
 
-                          </button>
-                        )
-                      )}
+                          <span className="font-mono text-[11px] font-bold text-primary">
+                            {asset.assetId}
+                          </span>
 
-                    </div>
+                        </button>
+
+                      )
+                    )}
+
                   </div>
-                )}
+                </div>
+              )}
 
             </div>
           </CardHeader>
@@ -683,7 +942,7 @@ export default function Assets() {
                     </TableHead>
 
                     <TableHead>
-                      Asset Type
+                      Type
                     </TableHead>
 
                     <TableHead>
@@ -691,11 +950,11 @@ export default function Assets() {
                     </TableHead>
 
                     <TableHead>
-                      Serial Number
+                      Serial
                     </TableHead>
 
                     <TableHead>
-                      Registered
+                      Customer
                     </TableHead>
 
                     <TableHead>
@@ -712,9 +971,12 @@ export default function Assets() {
 
                 <TableBody>
 
-                  {sortedAssets.length > 0 ? (
-                    sortedAssets.map(
+                  {paginatedAssets.length >
+                  0 ? (
+
+                    paginatedAssets.map(
                       (asset) => (
+
                         <TableRow
                           key={
                             asset.id ||
@@ -724,22 +986,16 @@ export default function Assets() {
 
                           {/* ASSET ID */}
 
-                          <TableCell
-                            className="
-                              font-bold
-                              text-primary
-                              font-mono
-                            "
-                          >
+                          <TableCell className="font-mono font-bold text-primary">
                             {asset.assetId ||
-                              asset.id ||
                               "-"}
                           </TableCell>
 
-                          {/* ASSET TYPE */}
+                          {/* TYPE */}
 
                           <TableCell className="font-medium">
                             {asset.assetType ||
+                              asset.assetName ||
                               "Equipment"}
                           </TableCell>
 
@@ -750,33 +1006,45 @@ export default function Assets() {
                               "-"}
                           </TableCell>
 
-                          {/* SERIAL NUMBER */}
+                          {/* SERIAL */}
 
-                          <TableCell
-                            className="
-                              font-mono
-                              text-xs
-                              text-muted-foreground
-                            "
-                          >
+                          <TableCell className="font-mono text-xs text-muted-foreground">
                             {asset.serialNumber ||
                               "-"}
                           </TableCell>
 
-                          {/* REGISTERED DATE */}
+                          {/* CUSTOMER */}
 
-                          <TableCell
-                            className="
-                              text-xs
-                              text-muted-foreground
-                              whitespace-nowrap
-                            "
-                          >
-                            {asset.registeredDate
-                              ? new Date(
-                                  asset.registeredDate
-                                ).toLocaleString()
-                              : "-"}
+                          <TableCell>
+
+                            {asset.customerName ? (
+
+                              <div>
+
+                                <div className="font-medium">
+                                  {
+                                    asset.customerName
+                                  }
+                                </div>
+
+                                {asset.customerId && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {
+                                      asset.customerId
+                                    }
+                                  </div>
+                                )}
+
+                              </div>
+
+                            ) : (
+
+                              <span className="text-muted-foreground">
+                                Not assigned
+                              </span>
+
+                            )}
+
                           </TableCell>
 
                           {/* STATUS */}
@@ -794,121 +1062,60 @@ export default function Assets() {
 
                           </TableCell>
 
-                          {/* ACTIONS */}
+                          {/* ACTION */}
 
-                          <TableCell>
+                          <TableCell className="text-right">
 
-                            <div className="flex items-center justify-end gap-1">
-
-                              {/* VIEW */}
-
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  handleViewAsset(
-                                    asset
-                                  )
-                                }
-                                className="gap-1.5"
-                              >
-                                <Eye className="h-4 w-4" />
-                                View
-                              </Button>
-
-                              {/* EDIT - RECEPTION ONLY */}
-
-                              {currentUser?.role ===
-                                "Reception" && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleEditAsset(
-                                      asset
-                                    )
-                                  }
-                                  className="gap-1.5"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                  Edit
-                                </Button>
-                              )}
-
-                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                handleViewAsset(
+                                  asset
+                                )
+                              }
+                              className="gap-1.5"
+                            >
+                              <Eye className="h-4 w-4" />
+                              View
+                            </Button>
 
                           </TableCell>
 
                         </TableRow>
+
                       )
                     )
+
                   ) : (
 
                     <TableRow>
 
                       <TableCell
                         colSpan={7}
-                        className="
-                          text-center
-                          py-12
-                        "
+                        className="py-14 text-center"
                       >
 
-                        <Boxes
-                          className="
-                            mx-auto
-                            h-8 w-8
-                            text-muted-foreground/40
-                            mb-2
-                          "
-                        />
+                        <Boxes className="mx-auto mb-3 h-9 w-9 text-muted-foreground/40" />
 
-                        <p
-                          className="
-                            text-sm
-                            font-semibold
-                            text-foreground
-                          "
-                        >
+                        <p className="text-sm font-semibold">
                           No assets found
                         </p>
 
-                        <p
-                          className="
-                            text-xs
-                            text-muted-foreground
-                            mt-1
-                          "
-                        >
-                          {statusFilter
-                            ? `There are no ${statusFilter.toLowerCase()} assets.`
-                            : search
+                        <p className="mt-1 text-xs text-muted-foreground">
+
+                          {search
                             ? "Try searching with a different keyword."
+                            : statusFilter
+                            ? `There are no ${statusFilter.toLowerCase()} assets.`
                             : "Register an asset to see it listed here."}
+
                         </p>
-
-                        {/* REGISTER BUTTON IN EMPTY STATE */}
-
-                        {!statusFilter &&
-                          !search &&
-                          currentUser?.role ===
-                            "Reception" && (
-                            <Button
-                              className="mt-4 gap-2"
-                              onClick={() =>
-                                navigate(
-                                  "/assets/register"
-                                )
-                              }
-                            >
-                              <Plus className="h-4 w-4" />
-                              Register Asset
-                            </Button>
-                          )}
 
                       </TableCell>
 
                     </TableRow>
+
                   )}
 
                 </TableBody>
@@ -918,6 +1125,148 @@ export default function Assets() {
             </div>
 
           </CardContent>
+
+          {/* =================================================
+              PAGINATION
+          ================================================= */}
+
+          {filteredAssets.length >
+            itemsPerPage && (
+
+            <div className="flex flex-col gap-3 border-t px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+
+              {/* SHOWING */}
+
+              <p className="text-sm text-muted-foreground">
+
+                Showing{" "}
+                <span className="font-medium text-foreground">
+                  {firstItem}
+                </span>{" "}
+                -{" "}
+                <span className="font-medium text-foreground">
+                  {lastItem}
+                </span>{" "}
+                of{" "}
+                <span className="font-medium text-foreground">
+                  {filteredAssets.length}
+                </span>{" "}
+                assets
+
+              </p>
+
+              {/* PAGINATION */}
+
+              <div className="flex items-center gap-1">
+
+                {/* PREVIOUS */}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    safeCurrentPage === 1
+                  }
+                  onClick={() =>
+                    setCurrentPage(
+                      (page) =>
+                        Math.max(
+                          1,
+                          page - 1
+                        )
+                    )
+                  }
+                  className="gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">
+                    Previous
+                  </span>
+                </Button>
+
+                {/* PAGE NUMBERS */}
+
+                <div className="flex items-center gap-1">
+
+                  {Array.from(
+                    {
+                      length: totalPages,
+                    },
+                    (_, index) =>
+                      index + 1
+                  ).map((page) => {
+
+                    /*
+                     * If there are many pages,
+                     * keep the pagination compact.
+                     */
+
+                    if (
+                      totalPages > 7 &&
+                      page !== 1 &&
+                      page !== totalPages &&
+                      Math.abs(
+                        page -
+                          safeCurrentPage
+                      ) > 1
+                    ) {
+                      return null;
+                    }
+
+                    return (
+                      <Button
+                        key={page}
+                        variant={
+                          page ===
+                          safeCurrentPage
+                            ? "default"
+                            : "outline"
+                        }
+                        size="sm"
+                        onClick={() =>
+                          setCurrentPage(
+                            page
+                          )
+                        }
+                        className="h-9 min-w-9"
+                      >
+                        {page}
+                      </Button>
+                    );
+                  })}
+
+                </div>
+
+                {/* NEXT */}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    safeCurrentPage ===
+                    totalPages
+                  }
+                  onClick={() =>
+                    setCurrentPage(
+                      (page) =>
+                        Math.min(
+                          totalPages,
+                          page + 1
+                        )
+                    )
+                  }
+                  className="gap-1"
+                >
+                  <span className="hidden sm:inline">
+                    Next
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+
+              </div>
+
+            </div>
+          )}
 
         </Card>
 
