@@ -73,20 +73,7 @@ export default function Sidebar() {
       <span>Register Asset</span>
     </NavLink>
 
-        <NavLink
-  to="/assets"
-  end 
-  className={({ isActive }) =>
-    `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-      isActive ? "bg-blue-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-    }`
-  }
->
-  <Boxes className="h-4 w-4" />
-  <span>Assets</span>
-</NavLink>
-
-{currentUser?.role === "Reception" && (
+        
   <>
     
 
@@ -102,10 +89,10 @@ export default function Sidebar() {
       <span>Check-Out</span>
     </NavLink>
   </>
-)}
+
 
 <NavLink
-  to="/asset-history"
+  to="/assets"
   className={({ isActive }) =>
     `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
       isActive ? "bg-blue-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
@@ -113,7 +100,7 @@ export default function Sidebar() {
   }
 >
   <History className="h-4 w-4" />
-  <span>Asset History</span>
+  <span>Assets</span>
 </NavLink>
 
         {/* ADMIN ONLY: Reports & Users */}

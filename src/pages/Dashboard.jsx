@@ -1,6 +1,8 @@
 // src/pages/Dashboard.jsx
+
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
+
 import {
   Card,
   CardHeader,
@@ -8,7 +10,9 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+
 import { Badge } from "@/components/ui/badge";
+
 import {
   PieChart,
   Pie,
@@ -31,15 +35,23 @@ export default function Dashboard() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
+  // =====================================================
+  // LOAD ASSETS
+  // =====================================================
+
   const assets =
     JSON.parse(localStorage.getItem("cars_assets")) || [];
 
+  // =====================================================
+  // ASSET COUNTS
+  // =====================================================
+
   const checkedOutCount = assets.filter(
-    (a) => a.status === "Checked Out"
+    (asset) => asset.status === "Checked Out"
   ).length;
 
   const availableCount = assets.filter(
-    (a) => a.status !== "Checked Out"
+    (asset) => asset.status === "Available"
   ).length;
 
   // =====================================================
@@ -49,12 +61,12 @@ export default function Dashboard() {
   const statusData = [
     {
       name: "Available",
-      value: availableCount || 0,
+      value: availableCount,
       color: "#10b981",
     },
     {
       name: "Checked Out",
-      value: checkedOutCount || 0,
+      value: checkedOutCount,
       color: "#f59e0b",
     },
   ];
@@ -72,8 +84,8 @@ export default function Dashboard() {
     "#64748b",
   ];
 
-  const typeMap = assets.reduce((acc, curr) => {
-    const type = curr.assetType || "Other";
+  const typeMap = assets.reduce((acc, asset) => {
+    const type = asset.assetType || "Other";
 
     acc[type] = (acc[type] || 0) + 1;
 
@@ -93,10 +105,7 @@ export default function Dashboard() {
   // CUSTOM TOOLTIP
   // =====================================================
 
-  const CustomTooltip = ({
-    active,
-    payload,
-  }) => {
+  const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0];
 
@@ -111,7 +120,8 @@ export default function Dashboard() {
             {data.name}
           </span>
 
-          : {data.value}{" "}
+          {" : "}
+          {data.value}{" "}
           {data.value === 1 ? "unit" : "units"}
         </div>
       );
@@ -120,8 +130,13 @@ export default function Dashboard() {
     return null;
   };
 
+  // =====================================================
+  // UI
+  // =====================================================
+
   return (
     <DashboardLayout>
+
       <div className="space-y-6">
 
         {/* =================================================
@@ -134,6 +149,10 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold tracking-tight">
               Dashboard
             </h1>
+
+            <p className="text-sm text-muted-foreground mt-1">
+              Overview of customer assets and their current status.
+            </p>
           </div>
 
           <Badge
@@ -166,6 +185,7 @@ export default function Dashboard() {
               hover:border-primary/40
             "
           >
+
             <CardHeader className="flex flex-row items-center justify-between pb-2">
 
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -187,14 +207,18 @@ export default function Dashboard() {
               </p>
 
             </CardContent>
+
           </Card>
+
 
           {/* =================================================
               CHECKED OUT
           ================================================= */}
 
           <Card
-            onClick={() => navigate("/asset-history")}
+            onClick={() =>
+              navigate("/assets?status=Checked%20Out")
+            }
             className="
               cursor-pointer
               transition-all
@@ -204,6 +228,7 @@ export default function Dashboard() {
               hover:border-amber-500/40
             "
           >
+
             <CardHeader className="flex flex-row items-center justify-between pb-2">
 
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -221,18 +246,22 @@ export default function Dashboard() {
               </div>
 
               <p className="text-xs text-muted-foreground mt-1">
-                View asset movement history
+                View checked-out assets
               </p>
 
             </CardContent>
+
           </Card>
+
 
           {/* =================================================
               AVAILABLE ASSETS
           ================================================= */}
 
           <Card
-            onClick={() => navigate("/assets")}
+            onClick={() =>
+              navigate("/assets?status=Available")
+            }
             className="
               cursor-pointer
               transition-all
@@ -242,6 +271,7 @@ export default function Dashboard() {
               hover:border-emerald-500/40
             "
           >
+
             <CardHeader className="flex flex-row items-center justify-between pb-2">
 
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -263,9 +293,11 @@ export default function Dashboard() {
               </p>
 
             </CardContent>
+
           </Card>
 
         </div>
+
 
         {/* =================================================
             PIE CHARTS
@@ -273,9 +305,12 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-          {/* STATUS CHART */}
+          {/* =================================================
+              STATUS CHART
+          ================================================= */}
 
           <Card>
+
             <CardHeader>
 
               <CardTitle className="text-base flex items-center gap-2">
@@ -320,7 +355,7 @@ export default function Dashboard() {
                         {statusData.map(
                           (entry, index) => (
                             <Cell
-                              key={`cell-${index}`}
+                              key={`status-cell-${index}`}
                               fill={entry.color}
                             />
                           )
@@ -355,9 +390,13 @@ export default function Dashboard() {
               )}
 
             </CardContent>
+
           </Card>
 
-          {/* TYPE BREAKDOWN */}
+
+          {/* =================================================
+              TYPE BREAKDOWN
+          ================================================= */}
 
           <Card>
 
@@ -404,7 +443,7 @@ export default function Dashboard() {
                         {typeData.map(
                           (entry, index) => (
                             <Cell
-                              key={`cell-${index}`}
+                              key={`type-cell-${index}`}
                               fill={entry.color}
                             />
                           )
@@ -445,6 +484,7 @@ export default function Dashboard() {
         </div>
 
       </div>
+
     </DashboardLayout>
   );
 }

@@ -10,21 +10,28 @@ import {
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "./components/ui/sonner";
 
-// Pages
+// ======================================================
+// PAGES
+// ======================================================
+
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import Assets from "./pages/Assets";
+
 import RegisterAsset from "./pages/RegisterAsset";
 import AssetDetails from "./pages/AssetDetails";
 import CheckOut from "./pages/CheckOut";
-import AssetHistory from "./pages/AssetHistory";
+
+// AssetHistory.jsx was renamed to Asset.jsx
+import Assets from "./pages/Assets";
+
 import Reports from "./pages/Reports";
 import Users from "./pages/Users";
 import Profile from "./pages/Profile";
-import { ThemeProvider } from "./context/ThemeContext";
 
+// ======================================================
+// ROUTE GUARDS
+// ======================================================
 
-// Route Guards
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
 
@@ -33,6 +40,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
 
+        {/* TOASTER */}
         <Toaster
           position="top-right"
           richColors
@@ -41,17 +49,16 @@ function App() {
 
         <Routes>
 
-          {/* =========================
+          {/* ==================================================
               PUBLIC ROUTES
-          ========================= */}
+          ================================================== */}
 
-          {/* Login page */}
           <Route
             path="/login"
             element={<Login />}
           />
 
-          {/* Start application at Login */}
+          {/* Default page */}
           <Route
             path="/"
             element={
@@ -61,30 +68,27 @@ function App() {
               />
             }
           />
-          
-          <Route 
+
+
+          {/* ==================================================
+              PROFILE
+              ADMIN + RECEPTION
+          ================================================== */}
+
+          <Route
             path="/profile"
             element={
               <ProtectedRoute>
                 <Profile />
               </ProtectedRoute>
             }
-          />  
-          <Route
-          path="/ThemeProvider"
-          element={
-            <ThemeProvider>
-              <Login />
-            </ThemeProvider>
-          }
-        />
-            
+          />
 
 
-          {/* =========================
-              SHARED PROTECTED ROUTES
+          {/* ==================================================
+              DASHBOARD
               ADMIN + RECEPTION
-          ========================= */}
+          ================================================== */}
 
           <Route
             path="/dashboard"
@@ -95,6 +99,14 @@ function App() {
             }
           />
 
+
+          {/* ==================================================
+              ASSET
+              ADMIN + RECEPTION
+
+              AssetHistory.jsx was renamed to Asset.jsx
+          ================================================== */}
+
           <Route
             path="/assets"
             element={
@@ -103,6 +115,12 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+
+          {/* ==================================================
+              ASSET DETAILS
+              ADMIN + RECEPTION
+          ================================================== */}
 
           <Route
             path="/assets/:id"
@@ -113,28 +131,11 @@ function App() {
             }
           />
 
-          <Route
-            path="/asset-history"
-            element={
-              <ProtectedRoute>
-                <AssetHistory />
-              </ProtectedRoute>
-            }
-          />
 
-          <Route
-            path="/assetshistory/:id"
-            element={
-              <ProtectedRoute>
-                <AssetHistory />
-              </ProtectedRoute>
-            }
-          />
-
-
-          {/* =========================
+          {/* ==================================================
+              REGISTER ASSET
               RECEPTION ONLY
-          ========================= */}
+          ================================================== */}
 
           <Route
             path="/assets/register"
@@ -147,6 +148,7 @@ function App() {
             }
           />
 
+          {/* Old URL compatibility */}
           <Route
             path="/register-asset"
             element={
@@ -157,21 +159,18 @@ function App() {
             }
           />
 
-          <Route
-            path="/checkout"
-            element={
-              <RoleProtectedRoute
-                allowedRoles={["Reception"]}
-              >
-                <CheckOut />
-              </RoleProtectedRoute>
-            }
-          />
 
+          {/* ==================================================
+              CHECKOUT
+              RECEPTION ONLY
+          ================================================== */}
 
-          {/* =========================
+          
+
+          {/* ==================================================
+              REPORTS
               ADMIN ONLY
-          ========================= */}
+          ================================================== */}
 
           <Route
             path="/reports"
@@ -183,6 +182,12 @@ function App() {
               </RoleProtectedRoute>
             }
           />
+
+
+          {/* ==================================================
+              USERS
+              ADMIN ONLY
+          ================================================== */}
 
           <Route
             path="/users"
@@ -196,9 +201,9 @@ function App() {
           />
 
 
-          {/* =========================
+          {/* ==================================================
               UNKNOWN URL
-          ========================= */}
+          ================================================== */}
 
           <Route
             path="*"
