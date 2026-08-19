@@ -19,15 +19,13 @@ import Dashboard from "./pages/Dashboard";
 
 import RegisterAsset from "./pages/RegisterAsset";
 import AssetDetails from "./pages/AssetDetails";
+import EditAsset from "./pages/EditAsset";
 import CheckOut from "./pages/CheckOut";
-
-// AssetHistory.jsx was renamed to Asset.jsx
 import Assets from "./pages/Assets";
 
 import Reports from "./pages/Reports";
 import Users from "./pages/Users";
 import Profile from "./pages/Profile";
-import EditAsset from "./pages/EditAsset";
 
 // ======================================================
 // ROUTE GUARDS
@@ -41,7 +39,10 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
 
-        {/* TOASTER */}
+        {/* ==================================================
+            TOASTER
+        ================================================== */}
+
         <Toaster
           position="top-right"
           richColors
@@ -54,12 +55,15 @@ function App() {
               PUBLIC ROUTES
           ================================================== */}
 
+          {/* LOGIN */}
+
           <Route
             path="/login"
             element={<Login />}
           />
 
-          {/* Default page */}
+          {/* DEFAULT */}
+
           <Route
             path="/"
             element={
@@ -67,47 +71,6 @@ function App() {
                 to="/login"
                 replace
               />
-            }
-          />
-          <Route
-  path="/assets/:id/edit"
-  element={
-    <ProtectedRoute>
-      <EditAsset />
-    </ProtectedRoute>
-  }
-  
-/>
- 
-   
-          {/* =========================
-    CHECKOUT
-    ADMIN + RECEPTION
-========================= */}
-
-<Route
-  path="/checkout"
-  element={
-    <RoleProtectedRoute
-      allowedRoles={["Admin", "Reception"]}
-    >
-      <CheckOut />
-    </RoleProtectedRoute>
-  }
-/>
-
-
-          {/* ==================================================
-              PROFILE
-              ADMIN + RECEPTION
-          ================================================== */}
-
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
             }
           />
 
@@ -128,10 +91,60 @@ function App() {
 
 
           {/* ==================================================
-              ASSET
+              PROFILE
+              CURRENT USER
               ADMIN + RECEPTION
+          ================================================== */}
 
-              AssetHistory.jsx was renamed to Asset.jsx
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* ==================================================
+              EDIT USER PROFILE
+              ADMIN CAN EDIT ADMIN + RECEPTION
+              
+              Example:
+              /profile/1
+              /profile/2
+          ================================================== */}
+
+          <Route
+            path="/profile/:userId"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* ==================================================
+              USERS & ROLES
+              ADMIN ONLY
+          ================================================== */}
+
+          <Route
+            path="/users"
+            element={
+              <RoleProtectedRoute
+                allowedRoles={["Admin"]}
+              >
+                <Users />
+              </RoleProtectedRoute>
+            }
+          />
+
+
+          {/* ==================================================
+              ASSETS
+              ADMIN + RECEPTION
           ================================================== */}
 
           <Route
@@ -160,6 +173,21 @@ function App() {
 
 
           {/* ==================================================
+              EDIT ASSET
+              ADMIN + RECEPTION
+          ================================================== */}
+
+          <Route
+            path="/assets/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EditAsset />
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* ==================================================
               REGISTER ASSET
               RECEPTION ONLY
           ================================================== */}
@@ -175,7 +203,12 @@ function App() {
             }
           />
 
-          {/* Old URL compatibility */}
+
+          {/* ==================================================
+              OLD REGISTER ASSET URL
+              REDIRECT
+          ================================================== */}
+
           <Route
             path="/register-asset"
             element={
@@ -189,10 +222,23 @@ function App() {
 
           {/* ==================================================
               CHECKOUT
-              RECEPTION ONLY
+              ADMIN + RECEPTION
           ================================================== */}
 
-          
+          <Route
+            path="/checkout"
+            element={
+              <RoleProtectedRoute
+                allowedRoles={[
+                  "Admin",
+                  "Reception",
+                ]}
+              >
+                <CheckOut />
+              </RoleProtectedRoute>
+            }
+          />
+
 
           {/* ==================================================
               REPORTS
@@ -206,23 +252,6 @@ function App() {
                 allowedRoles={["Admin"]}
               >
                 <Reports />
-              </RoleProtectedRoute>
-            }
-          />
-
-
-          {/* ==================================================
-              USERS
-              ADMIN ONLY
-          ================================================== */}
-
-          <Route
-            path="/users"
-            element={
-              <RoleProtectedRoute
-                allowedRoles={["Admin"]}
-              >
-                <Users />
               </RoleProtectedRoute>
             }
           />
