@@ -593,11 +593,7 @@ export default function Profile() {
               {pageTitle}
             </h1>
 
-            <p className="mt-1 text-sm text-muted-foreground">
-              {isEditingOtherUser
-                ? "Manage this user's account information."
-                : "Manage your account information and password."}
-            </p>
+           
 
           </div>
 
@@ -703,9 +699,7 @@ export default function Profile() {
                       Profile Information
                     </h2>
 
-                    <p className="text-xs text-muted-foreground">
-                      Update the user's basic account information.
-                    </p>
+                   
 
                   </div>
 
@@ -815,9 +809,7 @@ export default function Profile() {
 
                       </select>
 
-                      <p className="text-xs text-muted-foreground">
-                        Only an Admin can change a user's role.
-                      </p>
+                      
 
                     </div>
 
@@ -835,9 +827,7 @@ export default function Profile() {
                             Account Role
                           </p>
 
-                          <p className="text-xs text-muted-foreground">
-                            Your role is managed by an administrator.
-                          </p>
+                          
 
                         </div>
 
@@ -883,11 +873,7 @@ export default function Profile() {
                       Password
                     </h2>
 
-                    <p className="text-xs text-muted-foreground">
-                      {isEditingOtherUser
-                        ? "Set a new password for this user."
-                        : "Change your account password."}
-                    </p>
+                   
 
                   </div>
 

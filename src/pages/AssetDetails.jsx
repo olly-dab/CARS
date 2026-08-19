@@ -450,9 +450,7 @@ export default function AssetDetails() {
                     </Badge>
                   </div>
 
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Status is managed by Check-Out and Check-In.
-                  </p>
+                  
                 </div>
 
               </div>
