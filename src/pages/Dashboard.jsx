@@ -154,12 +154,7 @@ export default function Dashboard() {
             
           </div>
 
-          <Badge
-            variant="secondary"
-            className="self-start sm:self-auto"
-          >
-            {currentUser?.role || "Reception"} Access
-          </Badge>
+          
 
         </div>
 

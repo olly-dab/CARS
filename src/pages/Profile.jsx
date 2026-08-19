@@ -260,9 +260,7 @@ export default function Profile() {
               My Profile
             </h1>
 
-            <p className="text-sm text-muted-foreground">
-              View and manage your account information.
-            </p>
+            
           </div>
 
           <Button

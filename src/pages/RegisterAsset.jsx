@@ -552,7 +552,7 @@ export default function RegisterAsset() {
                 <Input
                   id="brand"
                   name="brand"
-                  placeholder="enter asset brand"
+                  placeholder="Enter asset brand"
                   value={formData.brand}
                   onChange={handleChange}
                 />
@@ -578,7 +578,7 @@ export default function RegisterAsset() {
                 <Input
                   id="serialNumber"
                   name="serialNumber"
-                  placeholder="enter your asset serial number"
+                  placeholder="Enter asset serial number"
                   value={formData.serialNumber}
                   onChange={handleChange}
                 />
@@ -604,7 +604,7 @@ export default function RegisterAsset() {
                 <Input
                   id="customerName"
                   name="customerName"
-                  placeholder="enter customer name"
+                  placeholder="Enter customer name"
                   value={formData.customerName}
                   onChange={handleChange}
                 />
@@ -635,7 +635,7 @@ export default function RegisterAsset() {
     id="phoneNumber"
     name="phoneNumber"
     type="tel"
-    placeholder="enter customer phone number"
+    placeholder="Enter customer phone number"
     value={formData.phoneNumber}
     onChange={(e) => {
       let value = e.target.value;
