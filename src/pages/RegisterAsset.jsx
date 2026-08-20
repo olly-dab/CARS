@@ -710,7 +710,7 @@ export default function RegisterAsset() {
                 <PlusCircle className="h-4 w-4" />
 
                 <span>
-                  Register Asset
+                  Register 
                 </span>
 
               </Button>

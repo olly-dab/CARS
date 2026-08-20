@@ -27,25 +27,16 @@ import {
   Save,
   ArrowLeft,
   Lock,
-  ShieldCheck,
   AtSign,
   KeyRound,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 export default function Profile() {
   const { currentUser, updateCurrentUser } = useAuth();
   const navigate = useNavigate();
   const { userId } = useParams();
-
-  // =====================================================
-  // PERMISSIONS
-  // =====================================================
-
-  const isAdmin = currentUser?.role === "Admin";
-
-  const isEditingOtherUser =
-    Boolean(userId) &&
-    String(userId) !== String(currentUser?.id);
 
   // =====================================================
   // USER BEING EDITED
@@ -73,11 +64,11 @@ export default function Profile() {
   });
 
   // =====================================================
-  // ROLE
+  // SHOW CURRENT PASSWORD
   // =====================================================
 
-  const [selectedRole, setSelectedRole] =
-    useState("Reception");
+  const [showCurrentPassword, setShowCurrentPassword] =
+    useState(false);
 
   // =====================================================
   // ERRORS
@@ -86,6 +77,16 @@ export default function Profile() {
   const [errors, setErrors] = useState({});
   const [passwordErrors, setPasswordErrors] =
     useState({});
+
+  // =====================================================
+  // PERMISSIONS
+  // =====================================================
+
+  const isAdmin = currentUser?.role === "Admin";
+
+  const isEditingOtherUser =
+    Boolean(userId) &&
+    String(userId) !== String(currentUser?.id);
 
   // =====================================================
   // LOAD PROFILE
@@ -102,9 +103,9 @@ export default function Profile() {
         localStorage.getItem("cars_users")
       ) || [];
 
-    // =================================================
+    // ===================================================
     // OWN PROFILE
-    // =================================================
+    // ===================================================
 
     if (!userId) {
       setProfileUser(currentUser);
@@ -114,16 +115,23 @@ export default function Profile() {
         username: currentUser.username || "",
       });
 
-      setSelectedRole(
-        currentUser.role || "Reception"
-      );
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      setShowCurrentPassword(false);
+
+      setErrors({});
+      setPasswordErrors({});
 
       return;
     }
 
-    // =================================================
-    // OTHER USER
-    // =================================================
+    // ===================================================
+    // FIND OTHER USER
+    // ===================================================
 
     const foundUser = users.find(
       (user) =>
@@ -136,14 +144,14 @@ export default function Profile() {
       return;
     }
 
-    // =================================================
+    // ===================================================
     // ONLY ADMIN CAN EDIT OTHER USERS
-    // =================================================
+    // ===================================================
 
     if (
       String(foundUser.id) !==
         String(currentUser.id) &&
-      currentUser.role !== "Admin"
+      !isAdmin
     ) {
       toast.error(
         "You are not authorized to edit this profile."
@@ -160,22 +168,25 @@ export default function Profile() {
       username: foundUser.username || "",
     });
 
-    setSelectedRole(
-      foundUser.role || "Reception"
-    );
-
     setPasswordForm({
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
     });
 
+    setShowCurrentPassword(false);
+
     setErrors({});
     setPasswordErrors({});
-  }, [currentUser, userId, navigate]);
+  }, [
+    currentUser,
+    userId,
+    navigate,
+    isAdmin,
+  ]);
 
   // =====================================================
-  // HANDLE PROFILE CHANGE
+  // PROFILE CHANGE
   // =====================================================
 
   const handleChange = (e) => {
@@ -193,7 +204,7 @@ export default function Profile() {
   };
 
   // =====================================================
-  // HANDLE PASSWORD CHANGE
+  // PASSWORD CHANGE
   // =====================================================
 
   const handlePasswordChange = (e) => {
@@ -237,6 +248,25 @@ export default function Profile() {
   const validatePassword = () => {
     const newErrors = {};
 
+    // If no password fields were entered,
+    // password change is optional.
+    if (
+      !passwordForm.currentPassword &&
+      !passwordForm.newPassword &&
+      !passwordForm.confirmPassword
+    ) {
+      return newErrors;
+    }
+
+    // Current password
+    if (!isEditingOtherUser) {
+      if (!passwordForm.currentPassword) {
+        newErrors.currentPassword =
+          "Current password is required.";
+      }
+    }
+
+    // New password
     if (!passwordForm.newPassword) {
       newErrors.newPassword =
         "New password is required.";
@@ -247,6 +277,7 @@ export default function Profile() {
         "Password must be at least 4 characters.";
     }
 
+    // Confirm password
     if (!passwordForm.confirmPassword) {
       newErrors.confirmPassword =
         "Please confirm your new password.";
@@ -262,25 +293,91 @@ export default function Profile() {
   };
 
   // =====================================================
-  // SAVE PROFILE
+  // SAVE EVERYTHING
   // =====================================================
 
-  const handleProfileSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!currentUser || !profileUser) {
       return;
     }
 
-    const validationErrors =
+    // =================================================
+    // VALIDATE PROFILE
+    // =================================================
+
+    const profileValidation =
       validateProfile();
 
     if (
-      Object.keys(validationErrors).length > 0
+      Object.keys(profileValidation).length >
+      0
     ) {
-      setErrors(validationErrors);
+      setErrors(profileValidation);
       return;
     }
+
+    // =================================================
+    // VALIDATE PASSWORD
+    // =================================================
+
+    const passwordValidation =
+      validatePassword();
+
+    if (
+      Object.keys(passwordValidation).length >
+      0
+    ) {
+      setPasswordErrors(
+        passwordValidation
+      );
+      return;
+    }
+
+    // =================================================
+    // CHECK CURRENT PASSWORD
+    // =================================================
+
+    const changingPassword =
+      Boolean(
+        passwordForm.currentPassword ||
+          passwordForm.newPassword ||
+          passwordForm.confirmPassword
+      );
+
+    if (
+      changingPassword &&
+      !isEditingOtherUser
+    ) {
+      if (
+        passwordForm.currentPassword !==
+        currentUser.password
+      ) {
+        setPasswordErrors({
+          currentPassword:
+            "Current password is incorrect.",
+        });
+
+        return;
+      }
+
+      if (
+        passwordForm.newPassword ===
+        currentUser.password
+      ) {
+        setPasswordErrors({
+          newPassword:
+            "New password must be different from your current password.",
+        });
+
+        return;
+      }
+    }
+
+    // =================================================
+    // SAVE
+    // =================================================
 
     try {
       const users =
@@ -314,25 +411,6 @@ export default function Profile() {
       }
 
       // =================================================
-      // ROLE
-      // =================================================
-
-      let finalRole = profileUser.role;
-
-      // Admin can change another user's role
-      if (
-        isAdmin &&
-        isEditingOtherUser
-      ) {
-        finalRole = selectedRole;
-      }
-
-      // User cannot change their own role
-      if (!isEditingOtherUser) {
-        finalRole = currentUser.role;
-      }
-
-      // =================================================
       // UPDATED USER
       // =================================================
 
@@ -343,10 +421,14 @@ export default function Profile() {
 
         username: form.username.trim(),
 
-        role: finalRole,
+        // Keep role exactly as it was.
+        role: profileUser.role,
 
-        // Keep password unchanged
-        password: profileUser.password,
+        // Change password only if password was entered.
+        password:
+          changingPassword
+            ? passwordForm.newPassword
+            : profileUser.password,
       };
 
       // =================================================
@@ -377,140 +459,20 @@ export default function Profile() {
         updateCurrentUser(updatedUser);
       }
 
-      setProfileUser(updatedUser);
-
-      window.dispatchEvent(
-        new Event("storage")
-      );
-
-      setErrors({});
-
-      toast.success(
-        isEditingOtherUser
-          ? "User profile updated successfully."
-          : "Your profile has been updated successfully."
-      );
-    } catch (error) {
-      console.error(
-        "Profile update error:",
-        error
-      );
-
-      toast.error(
-        "Unable to update profile."
-      );
-    }
-  };
-
-  // =====================================================
-  // CHANGE PASSWORD
-  // =====================================================
-
-  const handlePasswordSubmit = (e) => {
-    e.preventDefault();
-
-    if (!currentUser || !profileUser) {
-      return;
-    }
-
-    const validationErrors =
-      validatePassword();
-
-    if (
-      Object.keys(validationErrors).length > 0
-    ) {
-      setPasswordErrors(validationErrors);
-      return;
-    }
-
-    // =================================================
-    // OWN PASSWORD
-    // =================================================
-
-    if (!isEditingOtherUser) {
-      if (
-        !passwordForm.currentPassword
-      ) {
-        setPasswordErrors({
-          currentPassword:
-            "Current password is required.",
-        });
-
-        return;
-      }
-
-      if (
-        passwordForm.currentPassword !==
-        currentUser.password
-      ) {
-        setPasswordErrors({
-          currentPassword:
-            "Current password is incorrect.",
-        });
-
-        return;
-      }
-
-      if (
-        passwordForm.newPassword ===
-        currentUser.password
-      ) {
-        setPasswordErrors({
-          newPassword:
-            "New password must be different from your current password.",
-        });
-
-        return;
-      }
-    }
-
-    // =================================================
-    // SAVE PASSWORD
-    // =================================================
-
-    try {
-      const users =
-        JSON.parse(
-          localStorage.getItem("cars_users")
-        ) || [];
-
-      const updatedUser = {
-        ...profileUser,
-
-        password:
-          passwordForm.newPassword,
-
-        role: profileUser.role,
-      };
-
-      const updatedUsers = users.map(
-        (user) =>
-          String(user.id) ===
-          String(profileUser.id)
-            ? updatedUser
-            : user
-      );
-
-      localStorage.setItem(
-        "cars_users",
-        JSON.stringify(updatedUsers)
-      );
-
       // =================================================
-      // UPDATE CURRENT USER
+      // UPDATE LOCAL STATE
       // =================================================
-
-      if (
-        String(profileUser.id) ===
-        String(currentUser.id)
-      ) {
-        updateCurrentUser(updatedUser);
-      }
 
       setProfileUser(updatedUser);
 
+      setForm({
+        name: updatedUser.name || "",
+        username:
+          updatedUser.username || "",
+      });
+
       // =================================================
-      // CLEAR PASSWORD FORM
+      // CLEAR PASSWORD
       // =================================================
 
       setPasswordForm({
@@ -519,25 +481,44 @@ export default function Profile() {
         confirmPassword: "",
       });
 
+      setShowCurrentPassword(false);
+
+      setErrors({});
       setPasswordErrors({});
+
+      // =================================================
+      // NOTIFY OTHER COMPONENTS
+      // =================================================
 
       window.dispatchEvent(
         new Event("storage")
       );
 
-      toast.success(
-        isEditingOtherUser
-          ? "User password changed successfully."
-          : "Your password has been changed successfully."
-      );
+      // =================================================
+      // SUCCESS MESSAGE
+      // =================================================
+
+      if (changingPassword) {
+        toast.success(
+          isEditingOtherUser
+            ? "User profile and password updated successfully."
+            : "Your profile and password have been updated successfully."
+        );
+      } else {
+        toast.success(
+          isEditingOtherUser
+            ? "User profile updated successfully."
+            : "Your profile has been updated successfully."
+        );
+      }
     } catch (error) {
       console.error(
-        "Password update error:",
+        "Profile update error:",
         error
       );
 
       toast.error(
-        "Unable to change password."
+        "Unable to update profile."
       );
     }
   };
@@ -565,7 +546,7 @@ export default function Profile() {
   }
 
   // =====================================================
-  // TITLE
+  // PAGE TITLE
   // =====================================================
 
   const pageTitle = isEditingOtherUser
@@ -593,8 +574,6 @@ export default function Profile() {
               {pageTitle}
             </h1>
 
-           
-
           </div>
 
           <Button
@@ -618,7 +597,7 @@ export default function Profile() {
         </div>
 
         {/* =================================================
-            SINGLE PROFILE CARD
+            SINGLE CARD
         ================================================= */}
 
         <Card>
@@ -651,7 +630,7 @@ export default function Profile() {
 
               </div>
 
-              {/* ROLE */}
+              {/* ROLE BADGE ONLY */}
 
               <Badge
                 className="ml-auto"
@@ -670,12 +649,10 @@ export default function Profile() {
           </CardHeader>
 
           {/* =================================================
-              EVERYTHING INSIDE ONE FORM
+              ONE FORM
           ================================================= */}
 
-          <form
-            onSubmit={handleProfileSubmit}
-          >
+          <form onSubmit={handleSubmit}>
 
             <CardContent className="space-y-8 pt-6">
 
@@ -698,8 +675,6 @@ export default function Profile() {
                     <h2 className="text-base font-semibold">
                       Profile Information
                     </h2>
-
-                   
 
                   </div>
 
@@ -753,12 +728,8 @@ export default function Profile() {
                       <Input
                         id="username"
                         name="username"
-                        value={
-                          form.username
-                        }
-                        onChange={
-                          handleChange
-                        }
+                        value={form.username}
+                        onChange={handleChange}
                         placeholder="Enter username"
                         className="pl-9"
                       />
@@ -767,91 +738,15 @@ export default function Profile() {
 
                     {errors.username && (
                       <p className="text-xs text-destructive">
-                        {
-                          errors.username
-                        }
+                        {errors.username}
                       </p>
                     )}
 
                   </div>
 
-                  {/* ROLE */}
-
-                  {isAdmin &&
-                  isEditingOtherUser ? (
-
-                    <div className="space-y-2">
-
-                      <Label htmlFor="role">
-                        Account Role
-                      </Label>
-
-                      <select
-                        id="role"
-                        value={
-                          selectedRole
-                        }
-                        onChange={(e) =>
-                          setSelectedRole(
-                            e.target.value
-                          )
-                        }
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      >
-
-                        <option value="Admin">
-                          Admin
-                        </option>
-
-                        <option value="Reception">
-                          Reception
-                        </option>
-
-                      </select>
-
-                      
-
-                    </div>
-
-                  ) : (
-
-                    <div className="rounded-lg border bg-muted/30 p-4">
-
-                      <div className="flex items-center gap-3">
-
-                        <ShieldCheck className="h-5 w-5 text-primary" />
-
-                        <div>
-
-                          <p className="text-sm font-semibold">
-                            Account Role
-                          </p>
-
-                          
-
-                        </div>
-
-                        <Badge className="ml-auto">
-                          {
-                            profileUser.role
-                          }
-                        </Badge>
-
-                      </div>
-
-                    </div>
-
-                  )}
-
                 </div>
 
               </div>
-
-              {/* =================================================
-                  DIVIDER
-              ================================================= */}
-
-              <div className="border-t" />
 
               {/* =================================================
                   PASSWORD
@@ -859,29 +754,11 @@ export default function Profile() {
 
               <div>
 
-                <div className="mb-5 flex items-center gap-3">
-
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-
-                    <KeyRound className="h-4 w-4 text-primary" />
-
-                  </div>
-
-                  <div>
-
-                    <h2 className="text-base font-semibold">
-                      Password
-                    </h2>
-
-                   
-
-                  </div>
-
-                </div>
-
                 <div className="space-y-5">
 
-                  {/* CURRENT PASSWORD */}
+                  {/* =================================================
+                      CURRENT PASSWORD
+                  ================================================= */}
 
                   {!isEditingOtherUser && (
 
@@ -898,7 +775,11 @@ export default function Profile() {
                         <Input
                           id="currentPassword"
                           name="currentPassword"
-                          type="password"
+                          type={
+                            showCurrentPassword
+                              ? "text"
+                              : "password"
+                          }
                           value={
                             passwordForm.currentPassword
                           }
@@ -906,8 +787,32 @@ export default function Profile() {
                             handlePasswordChange
                           }
                           placeholder="Enter current password"
-                          className="pl-9"
+                          className="pl-9 pr-10"
                         />
+
+                        {/* EYE BUTTON */}
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowCurrentPassword(
+                              (previous) =>
+                                !previous
+                            )
+                          }
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          aria-label={
+                            showCurrentPassword
+                              ? "Hide current password"
+                              : "Show current password"
+                          }
+                        >
+                          {showCurrentPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
 
                       </div>
 
@@ -923,7 +828,9 @@ export default function Profile() {
 
                   )}
 
-                  {/* NEW PASSWORD */}
+                  {/* =================================================
+                      NEW PASSWORD
+                  ================================================= */}
 
                   <div className="space-y-2">
 
@@ -961,7 +868,9 @@ export default function Profile() {
 
                   </div>
 
-                  {/* CONFIRM PASSWORD */}
+                  {/* =================================================
+                      CONFIRM PASSWORD
+                  ================================================= */}
 
                   <div className="space-y-2">
 
@@ -998,6 +907,8 @@ export default function Profile() {
                     )}
 
                   </div>
+
+                  {/* ADMIN RESET MESSAGE */}
 
                 </div>
 

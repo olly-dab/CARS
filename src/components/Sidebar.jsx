@@ -151,9 +151,10 @@ export default function Sidebar() {
         ========================================= */}
 
         <NavLink
-          to="/assets"
-          className={navLinkClass}
-        >
+  to="/assets"
+  end
+  className={navLinkClass}
+>
           <Boxes className="h-4 w-4" />
 
           <span>
@@ -168,11 +169,6 @@ export default function Sidebar() {
 
         {currentUser?.role === "Admin" && (
           <div className="pt-4">
-
-            <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-              Admin Controls
-            </div>
-
 
             {/* Reports */}
 
@@ -197,7 +193,7 @@ export default function Sidebar() {
               <ShieldCheck className="h-4 w-4" />
 
               <span>
-                Users & Roles
+                Operator
               </span>
             </NavLink>
 

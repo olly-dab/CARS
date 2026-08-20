@@ -35,8 +35,9 @@ import {
   PlusCircle,
   Trash2,
   Pencil,
+  Eye,
+  EyeOff,
 } from "lucide-react";
-
 // =====================================================
 // DEFAULT USERS
 // =====================================================
@@ -67,6 +68,7 @@ const defaultUsers = [
 export default function Users() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   const [users, setUsers] = useState([]);
 
@@ -91,6 +93,14 @@ export default function Users() {
 
   const isAdmin =
     currentUser?.role === "Admin";
+
+  // =====================================================
+  // CHECK IF AN ADMIN ALREADY EXISTS
+  // =====================================================
+
+  const adminExists = users.some(
+    (user) => user.role === "Admin"
+  );
 
   // =====================================================
   // LOAD USERS
@@ -278,6 +288,18 @@ export default function Users() {
         "Username already exists.";
     }
 
+    // =================================================
+    // ONLY ONE ADMIN
+    // =================================================
+
+    if (
+      form.role === "Admin" &&
+      adminExists
+    ) {
+      errs.role =
+        "Only one Admin account is allowed.";
+    }
+
     return errs;
   };
 
@@ -295,6 +317,26 @@ export default function Users() {
     if (!isAdmin) {
       toast.error(
         "Only Admin can add users."
+      );
+
+      return;
+    }
+
+    // ---------------------------------------------
+    // EXTRA ADMIN SAFETY CHECK
+    // ---------------------------------------------
+
+    if (
+      form.role === "Admin" &&
+      adminExists
+    ) {
+      setErrors({
+        role:
+          "Only one Admin account is allowed.",
+      });
+
+      toast.error(
+        "Only one Admin account is allowed."
       );
 
       return;
@@ -396,40 +438,22 @@ export default function Users() {
 
         <div className="flex items-center justify-between">
 
-          <div>
-
-            <h1 className="text-3xl font-bold tracking-tight">
-              Users & Roles
-            </h1>
-
-            <p className="mt-1 text-sm text-muted-foreground">
-              Manage system users and their roles.
-            </p>
-
-          </div>
-
           {/* ADD USER - ADMIN ONLY */}
 
-          {isAdmin && (
-            <Button
-              onClick={() =>
-                setShowForm(
-                  (previous) =>
-                    !previous
-                )
-              }
-              className="gap-2"
-            >
+          <div className="flex items-center justify-end w-full">
+  {isAdmin && (
+    <Button
+      onClick={() =>
+        setShowForm((previous) => !previous)
+      }
+      className="gap-2"
+    >
+      <PlusCircle className="h-4 w-4" />
 
-              <PlusCircle className="h-4 w-4" />
-
-              {showForm
-                ? "Cancel"
-                : "Add User"}
-
-            </Button>
-          )}
-
+      {showForm ? "Cancel" : "Add User"}
+    </Button>
+  )}
+</div>
         </div>
 
         {/* =================================================
@@ -521,37 +545,72 @@ export default function Users() {
 
                 </div>
 
+                
+
                 {/* PASSWORD */}
 
-                <div className="space-y-2">
+<div className="space-y-2">
 
-                  <Label htmlFor="password">
-                    Password *
-                  </Label>
+  <Label htmlFor="password">
+    Password *
+  </Label>
 
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Set a password"
-                    value={form.password}
-                    onChange={(e) =>
-                      setForm(
-                        (previous) => ({
-                          ...previous,
-                          password:
-                            e.target.value,
-                        })
-                      )
-                    }
-                  />
+  <div className="relative">
 
-                  {errors.password && (
-                    <p className="text-xs text-destructive">
-                      {errors.password}
-                    </p>
-                  )}
+    <Input
+      id="password"
+      type={showPassword ? "text" : "password"}
+      placeholder="Set a password"
+      value={form.password}
+      onChange={(e) =>
+        setForm(
+          (previous) => ({
+            ...previous,
+            password:
+              e.target.value,
+          })
+        )
+      }
+      className="pr-10"
+    />
 
-                </div>
+    <button
+      type="button"
+      onClick={() =>
+        setShowPassword(
+          (previous) => !previous
+        )
+      }
+      className="
+        absolute
+        right-3
+        top-1/2
+        -translate-y-1/2
+        text-muted-foreground
+        hover:text-foreground
+      "
+      aria-label={
+        showPassword
+          ? "Hide password"
+          : "Show password"
+      }
+    >
+      {showPassword ? (
+        <EyeOff className="h-4 w-4" />
+      ) : (
+        <Eye className="h-4 w-4" />
+      )}
+    </button>
+
+  </div>
+
+  {errors.password && (
+    <p className="text-xs text-destructive">
+      {errors.password}
+    </p>
+  )}
+
+</div>
 
                 {/* ROLE */}
 
@@ -580,11 +639,32 @@ export default function Users() {
                       Reception
                     </option>
 
-                    <option value="Admin">
-                      Admin
-                    </option>
+                    {/* =================================================
+                        ONLY SHOW ADMIN OPTION IF NO ADMIN EXISTS
+                    ================================================= */}
+
+                    {!adminExists && (
+                      <option value="Admin">
+                        Admin
+                      </option>
+                    )}
 
                   </select>
+
+                  {/* ADMIN WARNING */}
+
+                  {adminExists && (
+                    <p className="text-xs text-muted-foreground">
+                      An Admin account already exists.
+                      New users can only be Reception.
+                    </p>
+                  )}
+
+                  {errors.role && (
+                    <p className="text-xs text-destructive">
+                      {errors.role}
+                    </p>
+                  )}
 
                 </div>
 
@@ -639,10 +719,6 @@ export default function Users() {
               </span>
 
             </CardTitle>
-
-            <CardDescription>
-              View and manage registered system users.
-            </CardDescription>
 
           </CardHeader>
 

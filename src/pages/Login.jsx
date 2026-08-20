@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -34,6 +34,32 @@ export default function Login() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // =====================================================
+  // INITIALIZE DEFAULT ADMIN IF NO USERS EXIST
+  // =====================================================
+
+  useEffect(() => {
+    const users = JSON.parse(localStorage.getItem("cars_users")) || [];
+
+    // If no users exist, create default admin
+    if (users.length === 0) {
+      const defaultAdmin = {
+        id: "admin-default",
+        name: "CARS Administrator",
+        username: "admin",
+        password: "admin123",
+        role: "Admin",
+        status: "Active",
+      };
+
+      localStorage.setItem("cars_users", JSON.stringify([defaultAdmin]));
+    }
+  }, []);
+
+  // =====================================================
+  // HANDLE LOGIN
+  // =====================================================
+
   const handleLogin = (e) => {
     e.preventDefault();
     setError("");
@@ -50,44 +76,18 @@ export default function Login() {
     }
 
     // --------------------------------------------
-    // GET REGISTERED USERS
+    // GET USERS FROM LOCALSTORAGE
     // --------------------------------------------
 
-    const users =
-      JSON.parse(
-        localStorage.getItem("cars_users")
-      ) || [];
-
-    // --------------------------------------------
-    // DEFAULT ADMIN
-    // --------------------------------------------
-
-    const defaultAdmin = {
-      id: "admin-default",
-      name: "CARS Administrator",
-      username: "admin",
-      password: "admin123",
-      role: "Admin",
-      status: "Active",
-    };
-
-    // --------------------------------------------
-    // COMBINE USERS
-    // --------------------------------------------
-
-    const allUsers = [
-      defaultAdmin,
-      ...users,
-    ];
+    const users = JSON.parse(localStorage.getItem("cars_users")) || [];
 
     // --------------------------------------------
     // FIND USER
     // --------------------------------------------
 
-    const foundUser = allUsers.find(
+    const foundUser = users.find(
       (u) =>
-        u.username?.toLowerCase() ===
-          username.toLowerCase() &&
+        u.username?.toLowerCase() === username.toLowerCase() &&
         u.password === password &&
         u.status === "Active"
     );
@@ -97,9 +97,7 @@ export default function Login() {
     // --------------------------------------------
 
     if (!foundUser) {
-      setError(
-        "Invalid username or password."
-      );
+      setError("Invalid username or password.");
       return;
     }
 
@@ -108,7 +106,6 @@ export default function Login() {
     // --------------------------------------------
 
     login(foundUser);
-
     navigate("/dashboard");
   };
 
@@ -139,12 +136,9 @@ export default function Login() {
                 CARS
               </h1>
 
-             
-
             </div>
 
           </div>
-
 
           {/* DESCRIPTION */}
 
@@ -154,10 +148,7 @@ export default function Login() {
               Customer Asset Registration.
             </h2>
 
-           
-
           </div>
-
 
           {/* LOCATION */}
 
@@ -170,7 +161,6 @@ export default function Login() {
           </div>
 
         </div>
-
 
         {/* ==================================================
             RIGHT LOGIN FORM
@@ -186,10 +176,7 @@ export default function Login() {
               Sign In
             </h2>
 
-            
-
           </div>
-
 
           {/* ERROR MESSAGE */}
 
@@ -206,7 +193,6 @@ export default function Login() {
             </div>
 
           )}
-
 
           {/* LOGIN FORM */}
 
@@ -244,12 +230,11 @@ export default function Login() {
 
             </div>
 
-
             {/* PASSWORD */}
 
             <div className="space-y-2">
 
-              {/* PASSWORD LABEL + FORGOT PASSWORD */}
+              {/* PASSWORD LABEL */}
 
               <div className="flex items-center justify-between">
 
@@ -257,10 +242,7 @@ export default function Login() {
                   Password
                 </Label>
 
-                
-
               </div>
-
 
               {/* PASSWORD INPUT */}
 
@@ -284,7 +266,6 @@ export default function Login() {
                   className="pl-9 pr-10"
                   autoComplete="current-password"
                 />
-
 
                 {/* SHOW / HIDE PASSWORD */}
 
@@ -314,7 +295,6 @@ export default function Login() {
               </div>
 
             </div>
-
 
             {/* LOGIN BUTTON */}
 
