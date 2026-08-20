@@ -1,3 +1,5 @@
+// src/pages/Login.jsx
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -18,6 +20,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+// =====================================================
+// DEFAULT USERS
+// =====================================================
+
+const defaultUsers = [
+  {
+    id: 1,
+    name: "System Admin",
+    username: "admin",
+    password: "admin123",
+    role: "Admin",
+    status: "Active",
+  },
+  {
+    id: 2,
+    name: "Front Desk",
+    username: "reception",
+    password: "rec123",
+    role: "Reception",
+    status: "Active",
+  },
+];
+
+// =====================================================
+// LOGIN PAGE
+// =====================================================
+
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -30,7 +59,9 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+
+  const [showPassword, setShowPassword] =
+    useState(false);
 
   // =====================================================
   // FORGOT PASSWORD STATES
@@ -39,8 +70,12 @@ export default function Login() {
   const [showForgotPassword, setShowForgotPassword] =
     useState(false);
 
-  const [resetUsername, setResetUsername] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const [resetUsername, setResetUsername] =
+    useState("");
+
+  const [newPassword, setNewPassword] =
+    useState("");
+
   const [confirmPassword, setConfirmPassword] =
     useState("");
 
@@ -50,49 +85,83 @@ export default function Login() {
   const [showConfirmPassword, setShowConfirmPassword] =
     useState(false);
 
-  const [resetError, setResetError] = useState("");
-  const [resetSuccess, setResetSuccess] = useState("");
+  const [resetError, setResetError] =
+    useState("");
+
+  const [resetSuccess, setResetSuccess] =
+    useState("");
 
   // =====================================================
-  // INITIALIZE DEFAULT ADMIN
+  // INITIALIZE USERS
   // =====================================================
 
   useEffect(() => {
     try {
-      const users =
-        JSON.parse(localStorage.getItem("cars_users")) || [];
+      const savedUsers =
+        localStorage.getItem("cars_users");
 
-      if (!Array.isArray(users) || users.length === 0) {
-        const defaultAdmin = {
-          id: "admin-default",
-          name: "CARS Administrator",
-          username: "admin",
-          password: "admin123",
-          role: "Admin",
-          status: "Active",
-        };
-
+      if (!savedUsers) {
         localStorage.setItem(
           "cars_users",
-          JSON.stringify([defaultAdmin])
+          JSON.stringify(defaultUsers)
+        );
+
+        return;
+      }
+
+      const users = JSON.parse(savedUsers);
+
+      if (
+        !Array.isArray(users) ||
+        users.length === 0
+      ) {
+        localStorage.setItem(
+          "cars_users",
+          JSON.stringify(defaultUsers)
         );
       }
     } catch (error) {
-      const defaultAdmin = {
-        id: "admin-default",
-        name: "CARS Administrator",
-        username: "admin",
-        password: "admin123",
-        role: "Admin",
-        status: "Active",
-      };
+      console.error(
+        "Unable to initialize users:",
+        error
+      );
 
       localStorage.setItem(
         "cars_users",
-        JSON.stringify([defaultAdmin])
+        JSON.stringify(defaultUsers)
       );
     }
   }, []);
+
+  // =====================================================
+  // GET USERS
+  // =====================================================
+
+  const getUsers = () => {
+    try {
+      const savedUsers =
+        localStorage.getItem("cars_users");
+
+      if (!savedUsers) {
+        return [];
+      }
+
+      const users = JSON.parse(savedUsers);
+
+      if (!Array.isArray(users)) {
+        return [];
+      }
+
+      return users;
+    } catch (error) {
+      console.error(
+        "Unable to read users:",
+        error
+      );
+
+      return [];
+    }
+  };
 
   // =====================================================
   // HANDLE LOGIN
@@ -103,78 +172,76 @@ export default function Login() {
 
     setError("");
 
-    // --------------------------------------------
+    // -----------------------------------------------
     // VALIDATION
-    // --------------------------------------------
+    // -----------------------------------------------
 
-    if (!username.trim() || !password) {
+    if (
+      !username.trim() ||
+      !password
+    ) {
       setError(
         "Please enter both your username and your password."
       );
+
       return;
     }
 
-    // --------------------------------------------
+    // -----------------------------------------------
     // GET USERS
-    // --------------------------------------------
+    // -----------------------------------------------
 
-    let users = [];
+    const users = getUsers();
 
-    try {
-      users =
-        JSON.parse(localStorage.getItem("cars_users")) || [];
-    } catch (error) {
-      users = [];
-    }
-
-    if (!Array.isArray(users)) {
-      users = [];
-    }
-
-    // --------------------------------------------
+    // -----------------------------------------------
     // FIND USER
-    // --------------------------------------------
+    // -----------------------------------------------
 
-    const enteredUsername = username
-      .trim()
-      .toLowerCase();
+    const enteredUsername =
+      username.trim().toLowerCase();
 
-    const foundUser = users.find((user) => {
-      const storedUsername = String(
-        user.username || ""
-      )
-        .trim()
-        .toLowerCase();
+    const foundUser = users.find(
+      (user) => {
+        const storedUsername =
+          String(user.username || "")
+            .trim()
+            .toLowerCase();
 
-      const storedPassword = String(
-        user.password || ""
-      );
+        const storedPassword =
+          String(user.password || "");
 
-      const storedStatus = String(
-        user.status || "Active"
-      )
-        .trim()
-        .toLowerCase();
+        const status =
+          String(
+            user.status || "Active"
+          )
+            .trim()
+            .toLowerCase();
 
-      return (
-        storedUsername === enteredUsername &&
-        storedPassword === password &&
-        storedStatus === "active"
-      );
-    });
+        return (
+          storedUsername ===
+            enteredUsername &&
+          storedPassword ===
+            password &&
+          status === "active"
+        );
+      }
+    );
 
-    // --------------------------------------------
+    // -----------------------------------------------
     // INVALID LOGIN
-    // --------------------------------------------
+    // -----------------------------------------------
 
     if (!foundUser) {
-      setError("Invalid username or password.");
+      setError(
+        "Invalid username or password."
+      );
+
       return;
     }
 
-    // --------------------------------------------
+    // -----------------------------------------------
     // LOGIN SUCCESS
-    // --------------------------------------------
+    // -----------------------------------------------
 
     login(foundUser);
 
@@ -194,7 +261,11 @@ export default function Login() {
 
     setResetError("");
     setResetSuccess("");
+
     setError("");
+
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
   };
 
   // =====================================================
@@ -216,7 +287,7 @@ export default function Login() {
   };
 
   // =====================================================
-  // HANDLE RESET PASSWORD
+  // RESET PASSWORD
   // =====================================================
 
   const handleResetPassword = (e) => {
@@ -225,126 +296,153 @@ export default function Login() {
     setResetError("");
     setResetSuccess("");
 
-    // --------------------------------------------
+    // -----------------------------------------------
     // VALIDATION
-    // --------------------------------------------
+    // -----------------------------------------------
 
     if (!resetUsername.trim()) {
-      setResetError("Please enter your username.");
+      setResetError(
+        "Please enter your username."
+      );
+
       return;
     }
 
     if (!newPassword) {
-      setResetError("Please enter a new password.");
+      setResetError(
+        "Please enter a new password."
+      );
+
       return;
     }
 
     if (!confirmPassword) {
-      setResetError("Please confirm your new password.");
-      return;
-    }
-
-    if (newPassword.length < 6) {
       setResetError(
-        "Password must be at least 6 characters long."
+        "Please confirm your new password."
       );
+
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      setResetError("Passwords do not match.");
+    if (newPassword.length < 4) {
+      setResetError(
+        "Password must be at least 4 characters."
+      );
+
       return;
     }
 
-    // --------------------------------------------
+    if (
+      newPassword !==
+      confirmPassword
+    ) {
+      setResetError(
+        "Passwords do not match."
+      );
+
+      return;
+    }
+
+    // -----------------------------------------------
     // GET USERS
-    // --------------------------------------------
+    // -----------------------------------------------
 
-    let users = [];
+    const users = getUsers();
 
-    try {
-      users =
-        JSON.parse(localStorage.getItem("cars_users")) || [];
-    } catch (error) {
-      users = [];
-    }
-
-    if (!Array.isArray(users)) {
-      setResetError("Unable to access user accounts.");
-      return;
-    }
-
-    // --------------------------------------------
+    // -----------------------------------------------
     // FIND USER
-    // --------------------------------------------
+    // -----------------------------------------------
 
-    const enteredUsername = resetUsername
-      .trim()
-      .toLowerCase();
+    const enteredUsername =
+      resetUsername.trim().toLowerCase();
 
-    const userIndex = users.findIndex((user) => {
-      const storedUsername = String(
-        user.username || ""
-      )
-        .trim()
-        .toLowerCase();
+    const userIndex =
+      users.findIndex(
+        (user) => {
+          const storedUsername =
+            String(user.username || "")
+              .trim()
+              .toLowerCase();
 
-      return storedUsername === enteredUsername;
-    });
+          return (
+            storedUsername ===
+            enteredUsername
+          );
+        }
+      );
 
-    // --------------------------------------------
+    // -----------------------------------------------
     // USER NOT FOUND
-    // --------------------------------------------
+    // -----------------------------------------------
 
     if (userIndex === -1) {
       setResetError(
         "Username not found. Please check your username and try again."
       );
+
       return;
     }
 
-    // --------------------------------------------
-    // CHECK USER STATUS
-    // --------------------------------------------
+    // -----------------------------------------------
+    // CHECK STATUS
+    // -----------------------------------------------
 
-    const currentUser = users[userIndex];
+    const selectedUser =
+      users[userIndex];
 
-    const currentStatus = String(
-      currentUser.status || "Active"
-    )
-      .trim()
-      .toLowerCase();
+    const status =
+      String(
+        selectedUser.status ||
+          "Active"
+      )
+        .trim()
+        .toLowerCase();
 
-    if (currentStatus !== "active") {
+    if (status !== "active") {
       setResetError(
         "This account is not active. Please contact an administrator."
       );
+
       return;
     }
 
-    // --------------------------------------------
+    // -----------------------------------------------
     // UPDATE PASSWORD
-    // --------------------------------------------
+    // -----------------------------------------------
 
-    const updatedUsers = [...users];
+    const updatedUsers =
+      users.map(
+        (user, index) => {
+          if (index === userIndex) {
+            return {
+              ...user,
+              password:
+                newPassword,
+            };
+          }
 
-    updatedUsers[userIndex] = {
-      ...updatedUsers[userIndex],
-      password: newPassword,
-    };
+          return user;
+        }
+      );
 
-    // --------------------------------------------
-    // SAVE USERS
-    // --------------------------------------------
+    // -----------------------------------------------
+    // SAVE
+    // -----------------------------------------------
 
     localStorage.setItem(
       "cars_users",
       JSON.stringify(updatedUsers)
     );
 
-    // --------------------------------------------
+    // Notify other components
+
+    window.dispatchEvent(
+      new Event("storage")
+    );
+
+    // -----------------------------------------------
     // SUCCESS
-    // --------------------------------------------
+    // -----------------------------------------------
 
     setResetSuccess(
       "Password reset successfully. You can now log in."
@@ -357,15 +455,19 @@ export default function Login() {
     setShowNewPassword(false);
     setShowConfirmPassword(false);
 
-    // --------------------------------------------
+    // -----------------------------------------------
     // RETURN TO LOGIN
-    // --------------------------------------------
+    // -----------------------------------------------
 
     setTimeout(() => {
       setShowForgotPassword(false);
       setResetSuccess("");
     }, 2000);
   };
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
@@ -446,7 +548,6 @@ export default function Login() {
               {/* ERROR */}
 
               {error && (
-
                 <div className="mb-4 flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
 
                   <AlertCircle className="h-4 w-4 shrink-0" />
@@ -456,7 +557,6 @@ export default function Login() {
                   </span>
 
                 </div>
-
               )}
 
               {/* LOGIN FORM */}
@@ -484,7 +584,10 @@ export default function Login() {
                       placeholder="e.g. admin"
                       value={username}
                       onChange={(e) => {
-                        setUsername(e.target.value);
+                        setUsername(
+                          e.target.value
+                        );
+
                         setError("");
                       }}
                       className="pl-9"
@@ -501,25 +604,9 @@ export default function Login() {
 
                   {/* PASSWORD LABEL */}
 
-                  <div className="flex items-center justify-between">
-
-                    <Label htmlFor="password">
-                      Password
-                    </Label>
-
-                    {/* FORGOT PASSWORD */}
-
-                    <button
-                      type="button"
-                      onClick={
-                        handleOpenForgotPassword
-                      }
-                      className="text-xs font-medium text-primary hover:underline"
-                    >
-                      Forgot password?
-                    </button>
-
-                  </div>
+                  <Label htmlFor="password">
+                    Password
+                  </Label>
 
                   {/* PASSWORD INPUT */}
 
@@ -537,20 +624,24 @@ export default function Login() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => {
-                        setPassword(e.target.value);
+                        setPassword(
+                          e.target.value
+                        );
+
                         setError("");
                       }}
                       className="pl-9 pr-10"
                       autoComplete="current-password"
                     />
 
-                    {/* SHOW / HIDE PASSWORD */}
+                    {/* EYE */}
 
                     <button
                       type="button"
                       onClick={() =>
                         setShowPassword(
-                          (prev) => !prev
+                          (previous) =>
+                            !previous
                         )
                       }
                       className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
@@ -567,6 +658,22 @@ export default function Login() {
                         <Eye className="h-4 w-4" />
                       )}
 
+                    </button>
+
+                  </div>
+
+                  {/* FORGOT PASSWORD */}
+
+                  <div className="flex justify-end">
+
+                    <button
+                      type="button"
+                      onClick={
+                        handleOpenForgotPassword
+                      }
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      Forgot password?
                     </button>
 
                   </div>
@@ -612,17 +719,13 @@ export default function Login() {
 
                 </div>
 
-                <p className="text-sm text-muted-foreground">
-                  Enter your username and create a new
-                  password.
-                </p>
+                
 
               </div>
 
               {/* RESET ERROR */}
 
               {resetError && (
-
                 <div className="mb-4 flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
 
                   <AlertCircle className="h-4 w-4 shrink-0" />
@@ -632,13 +735,11 @@ export default function Login() {
                   </span>
 
                 </div>
-
               )}
 
               {/* RESET SUCCESS */}
 
               {resetSuccess && (
-
                 <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-xs text-green-600">
 
                   <CheckCircle className="h-4 w-4 shrink-0" />
@@ -648,13 +749,14 @@ export default function Login() {
                   </span>
 
                 </div>
-
               )}
 
               {/* RESET FORM */}
 
               <form
-                onSubmit={handleResetPassword}
+                onSubmit={
+                  handleResetPassword
+                }
                 className="space-y-4"
               >
 
@@ -674,11 +776,14 @@ export default function Login() {
                       id="resetUsername"
                       type="text"
                       placeholder="Enter your username"
-                      value={resetUsername}
+                      value={
+                        resetUsername
+                      }
                       onChange={(e) => {
                         setResetUsername(
                           e.target.value
                         );
+
                         setResetError("");
                       }}
                       className="pl-9"
@@ -709,11 +814,14 @@ export default function Login() {
                           : "password"
                       }
                       placeholder="Enter new password"
-                      value={newPassword}
+                      value={
+                        newPassword
+                      }
                       onChange={(e) => {
                         setNewPassword(
                           e.target.value
                         );
+
                         setResetError("");
                       }}
                       className="pl-9 pr-10"
@@ -724,15 +832,11 @@ export default function Login() {
                       type="button"
                       onClick={() =>
                         setShowNewPassword(
-                          (prev) => !prev
+                          (previous) =>
+                            !previous
                         )
                       }
                       className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                      aria-label={
-                        showNewPassword
-                          ? "Hide new password"
-                          : "Show new password"
-                      }
                     >
 
                       {showNewPassword ? (
@@ -767,11 +871,14 @@ export default function Login() {
                           : "password"
                       }
                       placeholder="Confirm new password"
-                      value={confirmPassword}
+                      value={
+                        confirmPassword
+                      }
                       onChange={(e) => {
                         setConfirmPassword(
                           e.target.value
                         );
+
                         setResetError("");
                       }}
                       className="pl-9 pr-10"
@@ -782,15 +889,11 @@ export default function Login() {
                       type="button"
                       onClick={() =>
                         setShowConfirmPassword(
-                          (prev) => !prev
+                          (previous) =>
+                            !previous
                         )
                       }
                       className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                      aria-label={
-                        showConfirmPassword
-                          ? "Hide confirm password"
-                          : "Show confirm password"
-                      }
                     >
 
                       {showConfirmPassword ? (
@@ -823,7 +926,9 @@ export default function Login() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={handleBackToLogin}
+                  onClick={
+                    handleBackToLogin
+                  }
                   className="w-full gap-2"
                 >
 
