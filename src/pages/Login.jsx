@@ -3,18 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-import {
   Layers,
   Lock,
   User,
@@ -22,11 +10,21 @@ import {
   Eye,
   EyeOff,
   KeyRound,
+  ArrowLeft,
+  CheckCircle,
 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  // =====================================================
+  // LOGIN STATES
+  // =====================================================
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -35,14 +33,51 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   // =====================================================
-  // INITIALIZE DEFAULT ADMIN IF NO USERS EXIST
+  // FORGOT PASSWORD STATES
+  // =====================================================
+
+  const [showForgotPassword, setShowForgotPassword] =
+    useState(false);
+
+  const [resetUsername, setResetUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] =
+    useState("");
+
+  const [showNewPassword, setShowNewPassword] =
+    useState(false);
+
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
+
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState("");
+
+  // =====================================================
+  // INITIALIZE DEFAULT ADMIN
   // =====================================================
 
   useEffect(() => {
-    const users = JSON.parse(localStorage.getItem("cars_users")) || [];
+    try {
+      const users =
+        JSON.parse(localStorage.getItem("cars_users")) || [];
 
-    // If no users exist, create default admin
-    if (users.length === 0) {
+      if (!Array.isArray(users) || users.length === 0) {
+        const defaultAdmin = {
+          id: "admin-default",
+          name: "CARS Administrator",
+          username: "admin",
+          password: "admin123",
+          role: "Admin",
+          status: "Active",
+        };
+
+        localStorage.setItem(
+          "cars_users",
+          JSON.stringify([defaultAdmin])
+        );
+      }
+    } catch (error) {
       const defaultAdmin = {
         id: "admin-default",
         name: "CARS Administrator",
@@ -52,7 +87,10 @@ export default function Login() {
         status: "Active",
       };
 
-      localStorage.setItem("cars_users", JSON.stringify([defaultAdmin]));
+      localStorage.setItem(
+        "cars_users",
+        JSON.stringify([defaultAdmin])
+      );
     }
   }, []);
 
@@ -62,13 +100,14 @@ export default function Login() {
 
   const handleLogin = (e) => {
     e.preventDefault();
+
     setError("");
 
     // --------------------------------------------
     // VALIDATION
     // --------------------------------------------
 
-    if (!username || !password) {
+    if (!username.trim() || !password) {
       setError(
         "Please enter both your username and your password."
       );
@@ -76,21 +115,53 @@ export default function Login() {
     }
 
     // --------------------------------------------
-    // GET USERS FROM LOCALSTORAGE
+    // GET USERS
     // --------------------------------------------
 
-    const users = JSON.parse(localStorage.getItem("cars_users")) || [];
+    let users = [];
+
+    try {
+      users =
+        JSON.parse(localStorage.getItem("cars_users")) || [];
+    } catch (error) {
+      users = [];
+    }
+
+    if (!Array.isArray(users)) {
+      users = [];
+    }
 
     // --------------------------------------------
     // FIND USER
     // --------------------------------------------
 
-    const foundUser = users.find(
-      (u) =>
-        u.username?.toLowerCase() === username.toLowerCase() &&
-        u.password === password &&
-        u.status === "Active"
-    );
+    const enteredUsername = username
+      .trim()
+      .toLowerCase();
+
+    const foundUser = users.find((user) => {
+      const storedUsername = String(
+        user.username || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const storedPassword = String(
+        user.password || ""
+      );
+
+      const storedStatus = String(
+        user.status || "Active"
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        storedUsername === enteredUsername &&
+        storedPassword === password &&
+        storedStatus === "active"
+      );
+    });
 
     // --------------------------------------------
     // INVALID LOGIN
@@ -106,7 +177,194 @@ export default function Login() {
     // --------------------------------------------
 
     login(foundUser);
+
     navigate("/dashboard");
+  };
+
+  // =====================================================
+  // OPEN FORGOT PASSWORD
+  // =====================================================
+
+  const handleOpenForgotPassword = () => {
+    setShowForgotPassword(true);
+
+    setResetUsername("");
+    setNewPassword("");
+    setConfirmPassword("");
+
+    setResetError("");
+    setResetSuccess("");
+    setError("");
+  };
+
+  // =====================================================
+  // BACK TO LOGIN
+  // =====================================================
+
+  const handleBackToLogin = () => {
+    setShowForgotPassword(false);
+
+    setResetUsername("");
+    setNewPassword("");
+    setConfirmPassword("");
+
+    setResetError("");
+    setResetSuccess("");
+
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+  };
+
+  // =====================================================
+  // HANDLE RESET PASSWORD
+  // =====================================================
+
+  const handleResetPassword = (e) => {
+    e.preventDefault();
+
+    setResetError("");
+    setResetSuccess("");
+
+    // --------------------------------------------
+    // VALIDATION
+    // --------------------------------------------
+
+    if (!resetUsername.trim()) {
+      setResetError("Please enter your username.");
+      return;
+    }
+
+    if (!newPassword) {
+      setResetError("Please enter a new password.");
+      return;
+    }
+
+    if (!confirmPassword) {
+      setResetError("Please confirm your new password.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setResetError(
+        "Password must be at least 6 characters long."
+      );
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setResetError("Passwords do not match.");
+      return;
+    }
+
+    // --------------------------------------------
+    // GET USERS
+    // --------------------------------------------
+
+    let users = [];
+
+    try {
+      users =
+        JSON.parse(localStorage.getItem("cars_users")) || [];
+    } catch (error) {
+      users = [];
+    }
+
+    if (!Array.isArray(users)) {
+      setResetError("Unable to access user accounts.");
+      return;
+    }
+
+    // --------------------------------------------
+    // FIND USER
+    // --------------------------------------------
+
+    const enteredUsername = resetUsername
+      .trim()
+      .toLowerCase();
+
+    const userIndex = users.findIndex((user) => {
+      const storedUsername = String(
+        user.username || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return storedUsername === enteredUsername;
+    });
+
+    // --------------------------------------------
+    // USER NOT FOUND
+    // --------------------------------------------
+
+    if (userIndex === -1) {
+      setResetError(
+        "Username not found. Please check your username and try again."
+      );
+      return;
+    }
+
+    // --------------------------------------------
+    // CHECK USER STATUS
+    // --------------------------------------------
+
+    const currentUser = users[userIndex];
+
+    const currentStatus = String(
+      currentUser.status || "Active"
+    )
+      .trim()
+      .toLowerCase();
+
+    if (currentStatus !== "active") {
+      setResetError(
+        "This account is not active. Please contact an administrator."
+      );
+      return;
+    }
+
+    // --------------------------------------------
+    // UPDATE PASSWORD
+    // --------------------------------------------
+
+    const updatedUsers = [...users];
+
+    updatedUsers[userIndex] = {
+      ...updatedUsers[userIndex],
+      password: newPassword,
+    };
+
+    // --------------------------------------------
+    // SAVE USERS
+    // --------------------------------------------
+
+    localStorage.setItem(
+      "cars_users",
+      JSON.stringify(updatedUsers)
+    );
+
+    // --------------------------------------------
+    // SUCCESS
+    // --------------------------------------------
+
+    setResetSuccess(
+      "Password reset successfully. You can now log in."
+    );
+
+    setResetUsername("");
+    setNewPassword("");
+    setConfirmPassword("");
+
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+
+    // --------------------------------------------
+    // RETURN TO LOGIN
+    // --------------------------------------------
+
+    setTimeout(() => {
+      setShowForgotPassword(false);
+      setResetSuccess("");
+    }, 2000);
   };
 
   return (
@@ -163,149 +421,422 @@ export default function Login() {
         </div>
 
         {/* ==================================================
-            RIGHT LOGIN FORM
+            RIGHT SIDE
         ================================================== */}
 
         <div className="p-8 md:p-10 flex flex-col justify-center">
 
-          {/* HEADER */}
+          {/* ==================================================
+              LOGIN FORM
+          ================================================== */}
 
-          <div className="mb-6">
+          {!showForgotPassword && (
+            <>
 
-            <h2 className="text-2xl font-bold text-card-foreground">
-              Sign In
-            </h2>
+              {/* HEADER */}
 
-          </div>
+              <div className="mb-6">
 
-          {/* ERROR MESSAGE */}
+                <h2 className="text-2xl font-bold text-card-foreground">
+                  Sign In
+                </h2>
 
-          {error && (
+              </div>
 
-            <div className="mb-4 flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
+              {/* ERROR */}
 
-              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error && (
 
-              <span>
-                {error}
-              </span>
+                <div className="mb-4 flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
 
-            </div>
+                  <AlertCircle className="h-4 w-4 shrink-0" />
 
+                  <span>
+                    {error}
+                  </span>
+
+                </div>
+
+              )}
+
+              {/* LOGIN FORM */}
+
+              <form
+                onSubmit={handleLogin}
+                className="space-y-4"
+              >
+
+                {/* USERNAME */}
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="username">
+                    Username
+                  </Label>
+
+                  <div className="relative">
+
+                    <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+
+                    <Input
+                      id="username"
+                      type="text"
+                      placeholder="e.g. admin"
+                      value={username}
+                      onChange={(e) => {
+                        setUsername(e.target.value);
+                        setError("");
+                      }}
+                      className="pl-9"
+                      autoComplete="username"
+                    />
+
+                  </div>
+
+                </div>
+
+                {/* PASSWORD */}
+
+                <div className="space-y-2">
+
+                  {/* PASSWORD LABEL */}
+
+                  <div className="flex items-center justify-between">
+
+                    <Label htmlFor="password">
+                      Password
+                    </Label>
+
+                    {/* FORGOT PASSWORD */}
+
+                    <button
+                      type="button"
+                      onClick={
+                        handleOpenForgotPassword
+                      }
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+
+                  </div>
+
+                  {/* PASSWORD INPUT */}
+
+                  <div className="relative">
+
+                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+
+                    <Input
+                      id="password"
+                      type={
+                        showPassword
+                          ? "text"
+                          : "password"
+                      }
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setError("");
+                      }}
+                      className="pl-9 pr-10"
+                      autoComplete="current-password"
+                    />
+
+                    {/* SHOW / HIDE PASSWORD */}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowPassword(
+                          (prev) => !prev
+                        )
+                      }
+                      className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                      aria-label={
+                        showPassword
+                          ? "Hide password"
+                          : "Show password"
+                      }
+                    >
+
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+                {/* LOGIN BUTTON */}
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                >
+                  Login
+                </Button>
+
+              </form>
+
+            </>
           )}
 
-          {/* LOGIN FORM */}
+          {/* ==================================================
+              FORGOT PASSWORD FORM
+          ================================================== */}
 
-          <form
-            onSubmit={handleLogin}
-            className="space-y-4"
-          >
+          {showForgotPassword && (
+            <>
 
-            {/* USERNAME */}
+              {/* HEADER */}
 
-            <div className="space-y-2">
+              <div className="mb-6">
 
-              <Label htmlFor="username">
-                Username
-              </Label>
+                <div className="flex items-center gap-3 mb-3">
 
-              <div className="relative">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
 
-                <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <KeyRound className="h-5 w-5" />
 
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="e.g. admin"
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    setError("");
-                  }}
-                  className="pl-9"
-                  autoComplete="username"
-                />
+                  </div>
+
+                  <h2 className="text-2xl font-bold">
+                    Forgot Password?
+                  </h2>
+
+                </div>
+
+                <p className="text-sm text-muted-foreground">
+                  Enter your username and create a new
+                  password.
+                </p>
 
               </div>
 
-            </div>
+              {/* RESET ERROR */}
 
-            {/* PASSWORD */}
+              {resetError && (
 
-            <div className="space-y-2">
+                <div className="mb-4 flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
 
-              {/* PASSWORD LABEL */}
+                  <AlertCircle className="h-4 w-4 shrink-0" />
 
-              <div className="flex items-center justify-between">
+                  <span>
+                    {resetError}
+                  </span>
 
-                <Label htmlFor="password">
-                  Password
-                </Label>
+                </div>
 
-              </div>
+              )}
 
-              {/* PASSWORD INPUT */}
+              {/* RESET SUCCESS */}
 
-              <div className="relative">
+              {resetSuccess && (
 
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-xs text-green-600">
 
-                <Input
-                  id="password"
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError("");
-                  }}
-                  className="pl-9 pr-10"
-                  autoComplete="current-password"
-                />
+                  <CheckCircle className="h-4 w-4 shrink-0" />
 
-                {/* SHOW / HIDE PASSWORD */}
+                  <span>
+                    {resetSuccess}
+                  </span>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowPassword(
-                      (prev) => !prev
-                    )
-                  }
-                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                  aria-label={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
+                </div>
+
+              )}
+
+              {/* RESET FORM */}
+
+              <form
+                onSubmit={handleResetPassword}
+                className="space-y-4"
+              >
+
+                {/* USERNAME */}
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="resetUsername">
+                    Username
+                  </Label>
+
+                  <div className="relative">
+
+                    <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+
+                    <Input
+                      id="resetUsername"
+                      type="text"
+                      placeholder="Enter your username"
+                      value={resetUsername}
+                      onChange={(e) => {
+                        setResetUsername(
+                          e.target.value
+                        );
+                        setResetError("");
+                      }}
+                      className="pl-9"
+                      autoComplete="username"
+                    />
+
+                  </div>
+
+                </div>
+
+                {/* NEW PASSWORD */}
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="newPassword">
+                    New Password
+                  </Label>
+
+                  <div className="relative">
+
+                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+
+                    <Input
+                      id="newPassword"
+                      type={
+                        showNewPassword
+                          ? "text"
+                          : "password"
+                      }
+                      placeholder="Enter new password"
+                      value={newPassword}
+                      onChange={(e) => {
+                        setNewPassword(
+                          e.target.value
+                        );
+                        setResetError("");
+                      }}
+                      className="pl-9 pr-10"
+                      autoComplete="new-password"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowNewPassword(
+                          (prev) => !prev
+                        )
+                      }
+                      className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                      aria-label={
+                        showNewPassword
+                          ? "Hide new password"
+                          : "Show new password"
+                      }
+                    >
+
+                      {showNewPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+                {/* CONFIRM PASSWORD */}
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="confirmPassword">
+                    Confirm Password
+                  </Label>
+
+                  <div className="relative">
+
+                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+
+                    <Input
+                      id="confirmPassword"
+                      type={
+                        showConfirmPassword
+                          ? "text"
+                          : "password"
+                      }
+                      placeholder="Confirm new password"
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(
+                          e.target.value
+                        );
+                        setResetError("");
+                      }}
+                      className="pl-9 pr-10"
+                      autoComplete="new-password"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(
+                          (prev) => !prev
+                        )
+                      }
+                      className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                      aria-label={
+                        showConfirmPassword
+                          ? "Hide confirm password"
+                          : "Show confirm password"
+                      }
+                    >
+
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+                {/* RESET BUTTON */}
+
+                <Button
+                  type="submit"
+                  className="w-full gap-2"
                 >
 
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  <KeyRound className="h-4 w-4" />
 
-                </button>
+                  Reset Password
 
-              </div>
+                </Button>
 
-            </div>
+                {/* BACK TO LOGIN */}
 
-            {/* LOGIN BUTTON */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleBackToLogin}
+                  className="w-full gap-2"
+                >
 
-            <Button
-              type="submit"
-              className="w-full"
-            >
-              Login
-            </Button>
+                  <ArrowLeft className="h-4 w-4" />
 
-          </form>
+                  Back to Login
+
+                </Button>
+
+              </form>
+
+            </>
+          )}
 
         </div>
 
